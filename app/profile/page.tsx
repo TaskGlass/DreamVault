@@ -79,9 +79,14 @@ export default function ProfilePage() {
                 <User className="h-6 w-6 mr-2 text-purple-400" />
                 Profile
               </h1>
-              <p className="text-gray-400 mt-1">Manage your account and spiritual preferences</p>
+              <p className="text-gray-400 mt-1">
+                Manage your account
+                <br />
+                and spiritual preferences
+              </p>
             </div>
             <Button
+              size="sm"
               onClick={isEditing ? handleSave : () => setIsEditing(true)}
               className="bg-gradient-to-r from-purple-600 to-blue-600"
             >
@@ -91,54 +96,64 @@ export default function ProfilePage() {
 
           {/* Profile Card */}
           <GlassCard glow>
-            <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-              {/* Avatar */}
-              <div className="relative">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 flex items-center justify-center">
-                  <User className="h-12 w-12 text-purple-300" />
+            <div className="flex flex-col lg:flex-row items-center lg:items-start gap-8 p-2">
+              {/* Avatar Section */}
+              <div className="flex flex-col items-center space-y-4">
+                <div className="relative">
+                  <div className="w-32 h-32 rounded-full bg-gradient-to-br from-purple-500/30 to-pink-500/30 flex items-center justify-center border-2 border-purple-400/20 shadow-lg">
+                    <User className="h-16 w-16 text-purple-200" />
+                  </div>
+                  {isEditing && (
+                    <Button
+                      size="sm"
+                      className="absolute -bottom-2 -right-2 rounded-full w-10 h-10 p-0 bg-purple-600 hover:bg-purple-700 border-2 border-background"
+                      variant="default"
+                    >
+                      <Camera className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
-                {isEditing && (
-                  <Button
-                    size="sm"
-                    className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0 bg-transparent"
-                    variant="outline"
-                  >
-                    <Camera className="h-4 w-4" />
-                  </Button>
-                )}
               </div>
 
-              {/* Profile Info */}
-              <div className="flex-1 text-center md:text-left">
+              {/* Profile Info Section */}
+              <div className="flex-1 text-center lg:text-left space-y-4 min-w-0">
                 {isEditing ? (
-                  <div className="space-y-4">
+                  <div className="space-y-4 max-w-md mx-auto lg:mx-0">
                     <div>
-                      <Label htmlFor="name">Name</Label>
+                      <Label htmlFor="name" className="text-sm font-medium text-gray-300">
+                        Name
+                      </Label>
                       <Input
                         id="name"
                         value={profile.name}
                         onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                        className="bg-white/5 border-white/10"
+                        className="bg-white/5 border-white/10 mt-1"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="email" className="text-sm font-medium text-gray-300">
+                        Email
+                      </Label>
                       <Input
                         id="email"
                         type="email"
                         value={profile.email}
                         onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                        className="bg-white/5 border-white/10"
+                        className="bg-white/5 border-white/10 mt-1"
                       />
                     </div>
                   </div>
                 ) : (
-                  <div>
-                    <h2 className="text-2xl font-bold text-purple-300 mb-2">{profile.name}</h2>
-                    <p className="text-gray-400 mb-4">{profile.email}</p>
-                    <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                      <Badge className="bg-purple-500/20 text-purple-300">Dream Explorer</Badge>
-                      <Badge className="bg-blue-500/20 text-blue-300">
+                  <div className="space-y-4">
+                    <div>
+                      <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">{profile.name}</h2>
+                      <p className="text-gray-300 text-lg">{profile.email}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
+                      <Badge className="bg-purple-500/20 text-purple-200 border-purple-400/30 px-3 py-1 text-sm font-medium">
+                        Dream Explorer
+                      </Badge>
+                      <Badge className="bg-blue-500/20 text-blue-200 border-blue-400/30 px-3 py-1 text-sm font-medium">
                         {selectedZodiac?.symbol} {selectedZodiac?.name}
                       </Badge>
                     </div>
@@ -146,15 +161,25 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              {/* Current Plan */}
-              <div className="text-center">
-                <div className="p-4 rounded-xl bg-gradient-to-r from-purple-500/10 to-blue-500/10">
-                  <currentPlan.icon className={`h-8 w-8 ${currentPlan.color} mx-auto mb-2`} />
-                  <h3 className="font-semibold">{currentPlan.name}</h3>
-                  <p className="text-sm text-gray-400">{currentPlan.price}</p>
-                  <Button size="sm" variant="outline" className="mt-2 bg-transparent">
-                    Manage Plan
-                  </Button>
+              {/* Current Plan Section */}
+              <div className="flex-shrink-0">
+                <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-500/15 to-blue-500/15 border border-purple-400/20 backdrop-blur-sm min-w-[200px]">
+                  <div className="text-center space-y-4">
+                    <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-purple-500/30 to-blue-500/30 flex items-center justify-center">
+                      <currentPlan.icon className={`h-8 w-8 ${currentPlan.color}`} />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-white text-lg">{currentPlan.name}</h3>
+                      <p className="text-gray-300 font-medium">{currentPlan.price}</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full bg-white/5 border-white/20 hover:bg-white/10 text-white font-medium"
+                    >
+                      Manage Plan
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -258,7 +283,10 @@ export default function ProfilePage() {
                     <Crown className="h-4 w-4 mr-2" />
                     Upgrade to Astral Voyager
                   </Button>
-                  <Button variant="outline" className="w-full bg-transparent">
+                  <Button
+                    variant="outline"
+                    className="w-full bg-purple-600/20 border-purple-400/30 text-white hover:bg-purple-600/30"
+                  >
                     View All Plans
                   </Button>
                 </div>
@@ -269,17 +297,27 @@ export default function ProfilePage() {
                 <div className="space-y-4">
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm">Interpretations & Tarot Readings</span>
-                      <span className="text-sm font-medium">8/15</span>
+                      <span className="text-sm">Dream Interpretations</span>
+                      <span className="text-sm font-medium">5/15</span>
                     </div>
                     <div className="w-full bg-white/5 rounded-full h-2">
-                      <div className="bg-purple-500 h-2 rounded-full" style={{ width: "53%" }} />
+                      <div className="bg-purple-500 h-2 rounded-full" style={{ width: "33%" }} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm">Tarot Readings</span>
+                      <span className="text-sm font-medium">3/15</span>
+                    </div>
+                    <div className="w-full bg-white/5 rounded-full h-2">
+                      <div className="bg-blue-500 h-2 rounded-full" style={{ width: "20%" }} />
                     </div>
                   </div>
 
                   <div className="p-3 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-lg">
                     <p className="text-sm text-green-300">
-                      Great usage! You have 7 interpretations & tarot readings remaining this month.
+                      Great usage! You have 10 dream interpretations and 12 tarot readings remaining this month.
                     </p>
                   </div>
                 </div>
@@ -343,13 +381,22 @@ export default function ProfilePage() {
           <GlassCard>
             <h2 className="text-xl font-semibold mb-6">Account Management</h2>
             <div className="grid md:grid-cols-2 gap-4">
-              <Button variant="outline" className="justify-start bg-transparent">
+              <Button
+                variant="outline"
+                className="justify-start bg-purple-600/20 border-purple-400/30 text-white hover:bg-purple-600/30"
+              >
                 Export Dream Data
               </Button>
-              <Button variant="outline" className="justify-start bg-transparent">
+              <Button
+                variant="outline"
+                className="justify-start bg-blue-600/20 border-blue-400/30 text-white hover:bg-blue-600/30"
+              >
                 Privacy Settings
               </Button>
-              <Button variant="outline" className="justify-start bg-transparent">
+              <Button
+                variant="outline"
+                className="justify-start bg-indigo-600/20 border-indigo-400/30 text-white hover:bg-indigo-600/30"
+              >
                 Change Password
               </Button>
               <Button variant="destructive" className="justify-start">

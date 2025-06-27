@@ -522,13 +522,20 @@ export default function DashboardPage() {
 
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-base">Interpretations & Tarot Readings</span>
+                      <span className="text-base">Dream Interpretations</span>
+                      <span className="text-base font-medium">5/5</span>
+                    </div>
+                    <Progress value={100} className="h-2" />
+                    <p className="text-sm text-gray-400 mt-1">0 dream interpretations remaining this month</p>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-base">Tarot Readings</span>
                       <span className="text-base font-medium">3/5</span>
                     </div>
                     <Progress value={60} className="h-2" />
-                    <p className="text-sm text-gray-400 mt-1">
-                      2 interpretations & tarot readings remaining this month
-                    </p>
+                    <p className="text-sm text-gray-400 mt-1">2 tarot readings remaining this month</p>
                   </div>
 
                   <Button
