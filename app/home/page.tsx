@@ -17,7 +17,6 @@ import {
   Zap,
   Crown,
   ArrowRight,
-  Play,
   Check,
   BarChart3,
   BookOpen,
@@ -109,7 +108,7 @@ const plans = [
 const zodiacSigns = [
   { name: "Aries", symbol: "♈", dates: "Mar 21 - Apr 19" },
   { name: "Taurus", symbol: "♉", dates: "Apr 20 - May 20" },
-  { name: "Gemini", symbol: "♊", dates: "May 21 - Jun 20" },
+  { name: "Gemini", symbol: "♊", dates: "May 21 - Jun 22" },
   { name: "Cancer", symbol: "♋", dates: "Jun 21 - Jul 22" },
   { name: "Leo", symbol: "♌", dates: "Jul 23 - Aug 22" },
   { name: "Virgo", symbol: "♍", dates: "Aug 23 - Sep 22" },
@@ -250,7 +249,7 @@ export default function LandingPage() {
               personalized spiritual insights
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-6 justify-center w-full max-w-xs sm:max-w-none mx-auto">
+            <div className="flex justify-center w-full max-w-xs mx-auto">
               <Link href="/sign-up" className="w-full sm:w-auto">
                 <Button
                   size="lg"
@@ -263,21 +262,6 @@ export default function LandingPage() {
                   <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg" />
                 </Button>
               </Link>
-
-              <div className="w-full sm:w-auto">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="group relative text-lg px-10 py-4 h-[60px] font-semibold bg-white/5 border-2 border-white/20 hover:border-purple-400/50 hover:bg-white/10 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 w-full"
-                  onClick={() => scrollToSection("#preview")}
-                >
-                  <span className="relative z-10 flex items-center justify-center">
-                    <Play className="mr-3 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
-                    Watch Demo
-                  </span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg" />
-                </Button>
-              </div>
             </div>
           </div>
 
@@ -685,21 +669,25 @@ export default function LandingPage() {
       <footer className="py-8 border-t border-white/10">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center mb-4 md:mb-0">
+            <Link
+              href="/home"
+              className="flex items-center mb-4 md:mb-0 hover:opacity-80 transition-opacity"
+              onClick={() => window.scrollTo(0, 0)}
+            >
               <Sparkles className="h-8 w-8 text-purple-400 mr-3" />
               <span className="text-xl font-bold text-glow">DreamVault</span>
-            </div>
+            </Link>
 
             <div className="flex space-x-6 text-sm text-gray-400">
-              <button className="hover:text-purple-400" onClick={() => scrollToSection("#home")}>
-                Privacy Policy
-              </button>
-              <button className="hover:text-purple-400" onClick={() => scrollToSection("#home")}>
-                Terms of Service
-              </button>
-              <button className="hover:text-purple-400" onClick={() => scrollToSection("#home")}>
-                Support
-              </button>
+              <Link href="/privacy" onClick={() => window.scrollTo(0, 0)}>
+                <button className="hover:text-purple-400">Privacy Policy</button>
+              </Link>
+              <Link href="/terms" onClick={() => window.scrollTo(0, 0)}>
+                <button className="hover:text-purple-400">Terms of Service</button>
+              </Link>
+              <Link href="/support" onClick={() => window.scrollTo(0, 0)}>
+                <button className="hover:text-purple-400">Support</button>
+              </Link>
             </div>
           </div>
 
