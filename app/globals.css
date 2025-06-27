@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 263 70% 50%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 263 70% 50%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 263 70% 50%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Glassmorphism utilities */
+.glass {
+  @apply bg-white/10 backdrop-blur-md border border-white/20;
+}
+
+.glass-card {
+  @apply bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 shadow-2xl;
+}
+
+.dream-gradient {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 69, 19, 0.1) 0%,
+    rgba(75, 0, 130, 0.2) 25%,
+    rgba(25, 25, 112, 0.3) 50%,
+    rgba(72, 61, 139, 0.2) 75%,
+    rgba(106, 90, 205, 0.1) 100%
+  );
+}
+
+.glow {
+  box-shadow: 0 0 20px rgba(147, 51, 234, 0.3);
+}
+
+.text-glow {
+  text-shadow: 0 0 10px rgba(147, 51, 234, 0.5);
+}
+
+/* Fluid background */
+.fluid-background {
+  background: radial-gradient(ellipse at top, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(ellipse at left, rgba(139, 69, 19, 0.2) 0%, transparent 50%),
+    radial-gradient(ellipse at right, rgba(75, 0, 130, 0.3) 0%, transparent 50%),
+    linear-gradient(
+      135deg,
+      rgba(15, 23, 42, 1) 0%,
+      rgba(30, 41, 59, 1) 25%,
+      rgba(51, 65, 85, 1) 50%,
+      rgba(30, 41, 59, 1) 75%,
+      rgba(15, 23, 42, 1) 100%
+    );
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  background-attachment: fixed;
+}
