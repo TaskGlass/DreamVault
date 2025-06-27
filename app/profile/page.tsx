@@ -56,7 +56,12 @@ export default function ProfilePage() {
     price: "$9/month",
     icon: Zap,
     color: "text-purple-400",
-    features: ["15 interpretations/month", "Tarot readings", "Mood insights", "Affirmations"],
+    features: [
+      "15 interpretations & tarot readings/month",
+      "Advanced insights",
+      "Daily affirmations",
+      "Priority support",
+    ],
   }
 
   const selectedZodiac = zodiacSigns.find((sign) => sign.name === profile.zodiacSign)
@@ -264,7 +269,7 @@ export default function ProfilePage() {
                 <div className="space-y-4">
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm">Dream Interpretations</span>
+                      <span className="text-sm">Interpretations & Tarot Readings</span>
                       <span className="text-sm font-medium">8/15</span>
                     </div>
                     <div className="w-full bg-white/5 rounded-full h-2">
@@ -272,19 +277,9 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm">Tarot Readings</span>
-                      <span className="text-sm font-medium">3/∞</span>
-                    </div>
-                    <div className="w-full bg-white/5 rounded-full h-2">
-                      <div className="bg-blue-500 h-2 rounded-full" style={{ width: "20%" }} />
-                    </div>
-                  </div>
-
                   <div className="p-3 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-lg">
                     <p className="text-sm text-green-300">
-                      Great usage! You're making the most of your spiritual journey.
+                      Great usage! You have 7 interpretations & tarot readings remaining this month.
                     </p>
                   </div>
                 </div>

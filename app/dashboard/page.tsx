@@ -514,7 +514,7 @@ export default function DashboardPage() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-lg font-semibold">Dreamer Lite</h3>
+                      <h3 className="text-lg font-semibold">Dream Lite</h3>
                       <p className="text-base text-gray-400">Free Plan</p>
                     </div>
                     <Badge variant="outline">Active</Badge>
@@ -522,11 +522,13 @@ export default function DashboardPage() {
 
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-base">Dream Interpretations</span>
+                      <span className="text-base">Interpretations & Tarot Readings</span>
                       <span className="text-base font-medium">3/5</span>
                     </div>
                     <Progress value={60} className="h-2" />
-                    <p className="text-sm text-gray-400 mt-1">2 interpretations remaining this month</p>
+                    <p className="text-sm text-gray-400 mt-1">
+                      2 interpretations & tarot readings remaining this month
+                    </p>
                   </div>
 
                   <Button

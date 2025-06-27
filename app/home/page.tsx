@@ -69,11 +69,17 @@ const features = [
 
 const plans = [
   {
-    name: "Dreamer Lite",
+    name: "Dream Lite",
     price: "Free",
     icon: Sparkles,
     color: "text-gray-400",
-    features: ["5 interpretations/month", "Basic text interpretation", "Save dreams", "72h email support"],
+    features: [
+      "5 dream interpretations",
+      "5 tarot readings",
+      "Basic dream journal",
+      "Save dreams",
+      "Community support",
+    ],
   },
   {
     name: "Lucid Explorer",
@@ -82,12 +88,13 @@ const plans = [
     color: "text-purple-400",
     popular: true,
     features: [
-      "15 interpretations/month",
-      "Mood + emotion insights",
-      "Affirmations",
-      "Horoscope readings",
-      "3-card tarot interpretation",
-      "24h email support",
+      "15 dream interpretations",
+      "15 tarot readings",
+      "Advanced mood & emotion insights",
+      "Daily affirmations",
+      "Personalized horoscope readings",
+      "Pattern analysis",
+      "Priority email support",
     ],
   },
   {
@@ -96,11 +103,12 @@ const plans = [
     icon: Crown,
     color: "text-yellow-400",
     features: [
-      "30 interpretations/month",
-      "Weekly dream summaries",
+      "30 dream interpretations",
+      "30 tarot readings",
+      "Weekly dream pattern summaries",
       "Shareable dream reports",
+      "Advanced symbol analysis",
       "Priority support",
-      "All Starter features",
     ],
   },
 ]
