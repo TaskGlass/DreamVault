@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   Sparkles,
   Stars,
@@ -22,6 +23,7 @@ import {
   BarChart3,
   Shuffle,
   Eye,
+  User,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
@@ -60,7 +62,6 @@ const moodColors = {
 }
 
 export default function DashboardPage() {
-  // Remove the apiKeyMissing state and related code since the API key is now configured
   const [dream, setDream] = useState("")
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [interpretation, setInterpretation] = useState<any>(null)
@@ -232,10 +233,18 @@ export default function DashboardPage() {
               </h1>
               <p className="text-gray-400 mt-1 text-base">Welcome back to your dream sanctuary</p>
             </div>
+            <div className="flex items-center">
+              <Avatar
+                className="h-12 w-12 border-2 border-purple-400/50 shadow-lg cursor-pointer hover:border-purple-400 transition-colors"
+                onClick={() => navigateToPage("/profile")}
+              >
+                <AvatarImage src="/placeholder.svg?height=48&width=48" alt="Luna Starweaver" />
+                <AvatarFallback className="bg-gradient-to-br from-purple-600 to-blue-600 text-white">
+                  <User className="h-6 w-6" />
+                </AvatarFallback>
+              </Avatar>
+            </div>
           </div>
-
-          {/* API Key Warning */}
-          {/* Remove the API Key Warning section from the JSX since it's no longer needed */}
 
           {/* Quick Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -243,9 +252,9 @@ export default function DashboardPage() {
               <BookOpen className="h-6 w-6 text-purple-400 mx-auto mb-2" />
               <p className="text-3xl font-bold">23</p>
               <p className="text-base text-gray-400">Total Dreams</p>
-              <div className="flex items-center justify-center mt-1">
+              <div className="flex items-center justify-center mt-1 text-center">
                 <TrendingUp className="h-3 w-3 text-green-400 mr-1" />
-                <span className="text-sm text-green-400">+3 this week</span>
+                <span className="text-xs md:text-sm text-green-400">+3 this week</span>
               </div>
             </GlassCard>
 
@@ -253,9 +262,9 @@ export default function DashboardPage() {
               <Calendar className="h-6 w-6 text-blue-400 mx-auto mb-2" />
               <p className="text-3xl font-bold">7</p>
               <p className="text-base text-gray-400">This Month</p>
-              <div className="flex items-center justify-center mt-1">
+              <div className="flex items-center justify-center mt-1 text-center">
                 <TrendingUp className="h-3 w-3 text-green-400 mr-1" />
-                <span className="text-sm text-green-400">+12%</span>
+                <span className="text-xs md:text-sm text-green-400">+12%</span>
               </div>
             </GlassCard>
 
