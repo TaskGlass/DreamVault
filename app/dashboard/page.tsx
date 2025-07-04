@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   Sparkles,
   Stars,
@@ -23,7 +22,6 @@ import {
   BarChart3,
   Shuffle,
   Eye,
-  User,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
@@ -226,29 +224,18 @@ export default function DashboardPage() {
       <main className="pt-8 pb-28 md:ml-72 md:pb-8">
         <div className="p-4 space-y-6">
           {/* Welcome Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-glow">
-                {getGreeting()}, <span className="text-4xl">Luna ✨</span>
+              <h1 className="text-2xl lg:text-3xl font-bold text-glow">
+                {getGreeting()}, <span className="text-4xl lg:text-5xl">Luna ✨</span>
               </h1>
               <p className="text-gray-400 mt-1 text-base">Welcome back to your dream sanctuary</p>
-            </div>
-            <div className="flex items-center">
-              <Avatar
-                className="h-12 w-12 border-2 border-purple-400/50 shadow-lg cursor-pointer hover:border-purple-400 transition-colors"
-                onClick={() => navigateToPage("/profile")}
-              >
-                <AvatarImage src="/placeholder.svg?height=48&width=48" alt="Luna Starweaver" />
-                <AvatarFallback className="bg-gradient-to-br from-purple-600 to-blue-600 text-white">
-                  <User className="h-6 w-6" />
-                </AvatarFallback>
-              </Avatar>
             </div>
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <GlassCard className="text-center">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <GlassCard className="text-center p-3 sm:p-6">
               <BookOpen className="h-6 w-6 text-purple-400 mx-auto mb-2" />
               <p className="text-3xl font-bold">23</p>
               <p className="text-base text-gray-400">Total Dreams</p>
@@ -258,7 +245,7 @@ export default function DashboardPage() {
               </div>
             </GlassCard>
 
-            <GlassCard className="text-center">
+            <GlassCard className="text-center p-3 sm:p-6">
               <Calendar className="h-6 w-6 text-blue-400 mx-auto mb-2" />
               <p className="text-3xl font-bold">7</p>
               <p className="text-base text-gray-400">This Month</p>
@@ -268,14 +255,14 @@ export default function DashboardPage() {
               </div>
             </GlassCard>
 
-            <GlassCard className="text-center">
+            <GlassCard className="text-center p-3 sm:p-6">
               <Heart className="h-6 w-6 text-pink-400 mx-auto mb-2" />
               <p className="text-3xl font-bold">Peaceful</p>
               <p className="text-base text-gray-400">Top Mood</p>
               <Badge className="mt-1 bg-blue-500/20 text-blue-300 text-xs">35%</Badge>
             </GlassCard>
 
-            <GlassCard className="text-center">
+            <GlassCard className="text-center p-3 sm:p-6">
               <Zap className="h-6 w-6 text-yellow-400 mx-auto mb-2" />
               <p className="text-3xl font-bold">Flying</p>
               <p className="text-base text-gray-400">Top Symbol</p>
@@ -284,11 +271,11 @@ export default function DashboardPage() {
           </div>
 
           {/* Main Content Grid */}
-          <div className="grid lg:grid-cols-3 gap-6">
+          <div className="grid xl:grid-cols-3 gap-4 sm:gap-6">
             {/* Left Column */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="xl:col-span-2 space-y-4 sm:space-y-6">
               {/* Dream Input */}
-              <GlassCard>
+              <GlassCard className="p-4 sm:p-6">
                 <h2 className="text-2xl font-semibold mb-4 flex items-center">
                   <Stars className="h-5 w-5 mr-2 text-purple-400" />
                   Share Your Dream
@@ -297,15 +284,15 @@ export default function DashboardPage() {
                   placeholder="Describe your dream in detail... What did you see, feel, or experience?"
                   value={dream}
                   onChange={(e) => setDream(e.target.value)}
-                  className="min-h-32 bg-white/5 border-white/10 resize-none"
+                  className="min-h-24 sm:min-h-32 bg-white/5 border-white/10 resize-none"
                 />
-                <div className="flex justify-between items-center mt-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-4 gap-2 sm:gap-0">
                   <p className="text-base text-gray-400">{dream.length}/500 characters</p>
                   <Button
                     size="sm"
                     onClick={analyzeDream}
                     disabled={isAnalyzing}
-                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 w-full sm:w-auto"
                   >
                     {isAnalyzing ? (
                       <>
@@ -324,7 +311,7 @@ export default function DashboardPage() {
 
               {/* Interpretation Results */}
               {interpretation && (
-                <GlassCard glow>
+                <GlassCard glow className="p-4 sm:p-6">
                   <h2 className="text-2xl font-semibold mb-4 text-purple-300">{interpretation.title}</h2>
 
                   <div className="space-y-4">
@@ -333,7 +320,7 @@ export default function DashboardPage() {
                       <p className="text-base text-gray-300 whitespace-pre-wrap">{interpretation.summary}</p>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-4">
+                    <div className="grid sm:grid-cols-2 gap-4">
                       <div>
                         <h3 className="text-lg font-medium mb-2">Key Symbols</h3>
                         <ul className="space-y-1">
@@ -357,11 +344,21 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    <div className="flex gap-2 pt-4">
-                      <Button size="sm" variant="outline" onClick={() => navigateToPage("/journal")}>
+                    <div className="flex flex-col sm:flex-row gap-2 pt-4">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => navigateToPage("/journal")}
+                        className="w-full sm:w-auto"
+                      >
                         Save to Journal
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => navigateToPage("/readings")}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => navigateToPage("/readings")}
+                        className="w-full sm:w-auto"
+                      >
                         Get Tarot Reading
                       </Button>
                     </div>
@@ -370,15 +367,15 @@ export default function DashboardPage() {
               )}
 
               {/* Quick Actions */}
-              <GlassCard>
+              <GlassCard className="p-4 sm:p-6">
                 <h2 className="text-2xl font-semibold mb-4 flex items-center">
                   <Zap className="h-5 w-5 mr-2 text-yellow-400" />
                   Quick Actions
                 </h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
                   <Button
                     variant="outline"
-                    className="w-full h-20 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 border-white/20"
+                    className="w-full h-16 sm:h-20 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 border-white/20 p-2"
                     onClick={() => navigateToPage("/journal")}
                   >
                     <Plus className="h-6 w-6 mb-1 text-purple-400" />
@@ -386,7 +383,7 @@ export default function DashboardPage() {
                   </Button>
                   <Button
                     variant="outline"
-                    className="w-full h-20 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 border-white/20"
+                    className="w-full h-16 sm:h-20 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 border-white/20 p-2"
                     onClick={() => navigateToPage("/insights")}
                   >
                     <BarChart3 className="h-6 w-6 mb-1 text-blue-400" />
@@ -394,7 +391,7 @@ export default function DashboardPage() {
                   </Button>
                   <Button
                     variant="outline"
-                    className="w-full h-20 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 border-white/20"
+                    className="w-full h-16 sm:h-20 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 border-white/20 p-2"
                     onClick={() => navigateToPage("/readings")}
                   >
                     <Shuffle className="h-6 w-6 mb-1 text-pink-400" />
@@ -402,7 +399,7 @@ export default function DashboardPage() {
                   </Button>
                   <Button
                     variant="outline"
-                    className="w-full h-20 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 border-white/20"
+                    className="w-full h-16 sm:h-20 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 border-white/20 p-2"
                     onClick={() => navigateToPage("/readings")}
                   >
                     <Eye className="h-6 w-6 mb-1 text-green-400" />
@@ -412,8 +409,8 @@ export default function DashboardPage() {
               </GlassCard>
 
               {/* Recent Dreams */}
-              <GlassCard>
-                <div className="flex items-center justify-between mb-4">
+              <GlassCard className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
                   <h2 className="text-2xl font-semibold flex items-center">
                     <BookOpen className="h-5 w-5 mr-2 text-purple-400" />
                     Recent Dreams
@@ -422,7 +419,7 @@ export default function DashboardPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-xs px-2 py-1 md:text-sm md:px-3 md:py-2 bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
+                      className="text-xs px-2 py-1 md:text-sm md:px-3 md:py-2 bg-blue-600 hover:bg-blue-700 text-white border-blue-600 w-full sm:w-auto"
                       onClick={() => navigateToPage("/journal")}
                     >
                       View All
@@ -434,10 +431,10 @@ export default function DashboardPage() {
                   {recentDreams.map((dream) => (
                     <div
                       key={dream.id}
-                      className="flex justify-between items-center p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+                      className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer gap-2 sm:gap-0"
                     >
-                      <div>
-                        <h3 className="text-lg font-medium">{dream.title}</h3>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-medium truncate">{dream.title}</h3>
                         <p className="text-base text-gray-400">{new Date(dream.date).toLocaleDateString()}</p>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {dream.symbols.slice(0, 2).map((symbol, index) => (
@@ -447,7 +444,9 @@ export default function DashboardPage() {
                           ))}
                         </div>
                       </div>
-                      <Badge className={moodColors[dream.mood as keyof typeof moodColors] || "bg-gray-500/20"}>
+                      <Badge
+                        className={`${moodColors[dream.mood as keyof typeof moodColors] || "bg-gray-500/20"} flex-shrink-0 self-start sm:self-center`}
+                      >
                         {dream.mood}
                       </Badge>
                     </div>
@@ -457,9 +456,9 @@ export default function DashboardPage() {
             </div>
 
             {/* Right Column */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Daily Horoscope */}
-              <GlassCard>
+              <GlassCard className="p-4 sm:p-6">
                 <h2 className="text-2xl font-semibold mb-4 flex items-center">
                   <Star className="h-5 w-5 mr-2 text-yellow-400" />
                   Today's Horoscope
@@ -478,7 +477,7 @@ export default function DashboardPage() {
                     <Badge className="bg-yellow-500/20 text-yellow-300">★★★★☆</Badge>
                   </div>
 
-                  <div className="bg-gradient-to-r from-purple-500/10 to-slate-500/10 rounded-lg p-4">
+                  <div className="bg-gradient-to-r from-purple-500/10 to-slate-500/10 rounded-lg p-3 sm:p-4">
                     <p className="text-base text-gray-300 leading-relaxed mb-3">
                       Today brings powerful cosmic energy that aligns perfectly with your dream work. The moon's
                       position enhances your intuitive abilities, making this an excellent time for dream interpretation
@@ -490,7 +489,7 @@ export default function DashboardPage() {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     <div className="text-center p-2 bg-white/5 rounded-lg">
                       <p className="text-sm text-gray-400">Lucky Element</p>
                       <p className="text-base font-medium text-purple-300">Fire</p>
@@ -504,7 +503,7 @@ export default function DashboardPage() {
                   <Link href="/readings" scroll={true}>
                     <Button
                       size="sm"
-                      className="w-full bg-gradient-to-r from-purple-600 to-blue-600 mt-8"
+                      className="w-full bg-gradient-to-r from-purple-600 to-blue-600 mt-4 sm:mt-8"
                       onClick={() => navigateToPage("/readings")}
                     >
                       <Star className="h-4 w-4 mr-2" />
@@ -515,7 +514,7 @@ export default function DashboardPage() {
               </GlassCard>
 
               {/* Subscription Status */}
-              <GlassCard>
+              <GlassCard className="p-4 sm:p-6">
                 <h2 className="text-2xl font-semibold mb-4 flex items-center">
                   <Crown className="h-5 w-5 mr-2 text-yellow-400" />
                   Your Plan
@@ -558,7 +557,7 @@ export default function DashboardPage() {
               </GlassCard>
 
               {/* Daily Affirmation */}
-              <GlassCard>
+              <GlassCard className="p-4 sm:p-6">
                 <h2 className="text-2xl font-semibold mb-4 flex items-center">
                   <Heart className="h-5 w-5 mr-2 text-pink-400" />
                   Daily Affirmation
@@ -569,7 +568,12 @@ export default function DashboardPage() {
                     "I trust my inner wisdom and embrace the messages my dreams bring to my conscious mind."
                   </blockquote>
                   <Link href="/readings" scroll={true}>
-                    <Button size="sm" variant="outline" onClick={() => navigateToPage("/readings")}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => navigateToPage("/readings")}
+                      className="w-full sm:w-auto"
+                    >
                       More Affirmations
                     </Button>
                   </Link>
