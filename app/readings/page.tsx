@@ -5,7 +5,7 @@ import { Navigation } from "@/components/navigation"
 import { GlassCard } from "@/components/ui/glass-card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Sparkles, Moon, Star, Shuffle, Eye, Heart } from "lucide-react"
+import { Sparkles, Moon, Star, Shuffle, Eye, Heart, X } from "lucide-react"
 
 const tarotCards = [
   { name: "The Fool", meaning: "New beginnings, innocence, spontaneity", image: "🃏" },
@@ -17,18 +17,133 @@ const tarotCards = [
 ]
 
 const zodiacSigns = [
-  { name: "Aries", dates: "Mar 21 - Apr 19", element: "Fire", symbol: "♈" },
-  { name: "Taurus", dates: "Apr 20 - May 20", element: "Earth", symbol: "♉" },
-  { name: "Gemini", dates: "May 21 - Jun 20", element: "Air", symbol: "♊" },
-  { name: "Cancer", dates: "Jun 21 - Jul 22", element: "Water", symbol: "♋" },
-  { name: "Leo", dates: "Jul 23 - Aug 22", element: "Fire", symbol: "♌" },
-  { name: "Virgo", dates: "Aug 23 - Sep 22", element: "Earth", symbol: "♍" },
+  {
+    name: "Aries",
+    dates: "Mar 21 - Apr 19",
+    element: "Fire",
+    symbol: "♈",
+    horoscope:
+      "Your fiery energy is at its peak today. Channel this passion into creative projects and don't be afraid to take the lead. Dreams may reveal hidden ambitions waiting to be pursued.",
+    dreamGuidance:
+      "Fire signs often dream of conquest and adventure. Pay attention to dreams involving mountains, flames, or battles - they represent your inner warrior awakening.",
+  },
+  {
+    name: "Taurus",
+    dates: "Apr 20 - May 20",
+    element: "Earth",
+    symbol: "♉",
+    horoscope:
+      "Stability and comfort are your focus now. Trust your practical instincts and pay attention to dreams about nature or material security. A steady approach will yield the best results.",
+    dreamGuidance:
+      "Earth signs dream of nature and material security. Gardens, trees, and fertile lands in your dreams symbolize growth and abundance coming your way.",
+  },
+  {
+    name: "Gemini",
+    dates: "May 21 - Jun 20",
+    element: "Air",
+    symbol: "♊",
+    horoscope:
+      "Communication flows freely today. Your dreams may be filled with conversations and messages. Stay curious and open to new information that could change your perspective.",
+    dreamGuidance:
+      "Air signs often dream of flight and communication. Dreams with birds, wind, or conversations indicate important messages from your subconscious.",
+  },
+  {
+    name: "Cancer",
+    dates: "Jun 21 - Jul 22",
+    element: "Water",
+    symbol: "♋",
+    horoscope:
+      "Your intuition is heightened, especially regarding family and home matters. Dreams about water or childhood memories carry important emotional messages. Trust your feelings.",
+    dreamGuidance:
+      "Water signs dream deeply of emotions and memories. Ocean waves, rain, or childhood scenes in dreams indicate emotional healing and intuitive insights.",
+  },
+  {
+    name: "Leo",
+    dates: "Jul 23 - Aug 22",
+    element: "Fire",
+    symbol: "♌",
+    horoscope:
+      "The spotlight is on you today. Your creative energy shines bright, and dreams may feature themes of performance or recognition. Embrace your natural leadership qualities.",
+    dreamGuidance:
+      "Fire signs dream of glory and creativity. Dreams with stages, spotlights, or golden objects represent your inner desire to shine and inspire others.",
+  },
+  {
+    name: "Virgo",
+    dates: "Aug 23 - Sep 22",
+    element: "Earth",
+    symbol: "♍",
+    horoscope:
+      "Attention to detail serves you well. Dreams may focus on organization, health, or service to others. Your analytical mind can solve problems that have been puzzling you.",
+    dreamGuidance:
+      "Earth signs dream of order and service. Dreams involving cleaning, organizing, or helping others indicate your soul's desire to bring healing to the world.",
+  },
+  {
+    name: "Libra",
+    dates: "Sep 23 - Oct 22",
+    element: "Air",
+    symbol: "♎",
+    horoscope:
+      "Balance and harmony are key themes. Dreams about relationships or artistic pursuits carry special significance. Seek beauty and fairness in all your interactions today.",
+    dreamGuidance:
+      "Air signs dream of balance and relationships. Dreams with mirrors, partnerships, or beautiful art reflect your desire for harmony and connection.",
+  },
+  {
+    name: "Scorpio",
+    dates: "Oct 23 - Nov 21",
+    element: "Water",
+    symbol: "♏",
+    horoscope:
+      "Deep transformation is occurring beneath the surface. Pay attention to intense dreams or recurring symbols. Your psychic abilities are particularly strong right now.",
+    dreamGuidance:
+      "Water signs dream of transformation and mystery. Dreams involving caves, underground spaces, or phoenix imagery indicate profound spiritual rebirth.",
+  },
+  {
+    name: "Sagittarius",
+    dates: "Nov 22 - Dec 21",
+    element: "Fire",
+    symbol: "♐",
+    horoscope:
+      "Adventure calls to your spirit. Dreams of distant places or philosophical insights point toward expansion. Your optimism can inspire others to reach for their dreams too.",
+    dreamGuidance:
+      "Fire signs dream of adventure and wisdom. Dreams with arrows, distant lands, or wise teachers represent your quest for truth and meaning.",
+  },
+  {
+    name: "Capricorn",
+    dates: "Dec 22 - Jan 19",
+    element: "Earth",
+    symbol: "♑",
+    horoscope:
+      "Ambition and discipline guide your path. Dreams about climbing mountains or achieving goals reflect your inner drive. Patience and persistence will lead to success.",
+    dreamGuidance:
+      "Earth signs dream of achievement and structure. Dreams involving climbing, building, or reaching summits indicate your path to mastery and success.",
+  },
+  {
+    name: "Aquarius",
+    dates: "Jan 20 - Feb 18",
+    element: "Air",
+    symbol: "♒",
+    horoscope:
+      "Innovation and friendship are highlighted. Dreams may feature futuristic themes or group activities. Your unique perspective can bring positive change to your community.",
+    dreamGuidance:
+      "Air signs dream of the future and humanity. Dreams with flying machines, groups of people, or futuristic scenes indicate your role as a visionary.",
+  },
+  {
+    name: "Pisces",
+    dates: "Feb 19 - Mar 20",
+    element: "Water",
+    symbol: "♓",
+    horoscope:
+      "Your psychic sensitivity is at its peak. Dreams are especially vivid and meaningful now. Trust your intuition and pay attention to synchronicities in your waking life.",
+    dreamGuidance:
+      "Water signs dream of the mystical and spiritual. Dreams with fish, vast oceans, or ethereal beings indicate your connection to divine wisdom and universal love.",
+  },
 ]
 
 export default function ReadingsPage() {
   const [selectedCards, setSelectedCards] = useState<any[]>([])
   const [isDrawing, setIsDrawing] = useState(false)
   const [currentHoroscope, setCurrentHoroscope] = useState<any>(null)
+  const [selectedZodiac, setSelectedZodiac] = useState<any>(null)
 
   const tarotRef = useRef<HTMLDivElement>(null)
   const horoscopeRef = useRef<HTMLDivElement>(null)
@@ -254,11 +369,12 @@ export default function ReadingsPage() {
           {/* Zodiac Quick Reference */}
           <GlassCard>
             <h2 className="text-xl font-semibold mb-4">Zodiac Signs</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {zodiacSigns.map((sign) => (
                 <div
                   key={sign.name}
-                  className="flex items-center p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+                  className="flex items-center p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer hover:glow"
+                  onClick={() => setSelectedZodiac(sign)}
                 >
                   <div className="text-2xl mr-3">{sign.symbol}</div>
                   <div>
@@ -269,6 +385,46 @@ export default function ReadingsPage() {
               ))}
             </div>
           </GlassCard>
+
+          {/* Zodiac Horoscope Modal */}
+          {selectedZodiac && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <GlassCard className="max-w-md w-full relative" glow>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute top-2 right-2 text-gray-400 hover:text-white"
+                  onClick={() => setSelectedZodiac(null)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+
+                <div className="text-center mb-6">
+                  <div className="text-5xl mb-3">{selectedZodiac.symbol}</div>
+                  <h3 className="text-2xl font-bold text-purple-300 mb-1">{selectedZodiac.name}</h3>
+                  <p className="text-sm text-gray-400 mb-2">{selectedZodiac.dates}</p>
+                  <Badge className="bg-gradient-to-r from-purple-500/20 to-pink-500/20">
+                    {selectedZodiac.element} Sign
+                  </Badge>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold text-yellow-300 mb-2 flex items-center">
+                      <Star className="h-4 w-4 mr-2" />
+                      Today's Horoscope
+                    </h4>
+                    <p className="text-gray-300 leading-relaxed text-sm">{selectedZodiac.horoscope}</p>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg p-4">
+                    <h5 className="font-medium text-purple-300 mb-2">Dream Guidance</h5>
+                    <p className="text-xs text-gray-300">{selectedZodiac.dreamGuidance}</p>
+                  </div>
+                </div>
+              </GlassCard>
+            </div>
+          )}
         </div>
       </main>
     </div>
