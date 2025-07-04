@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Navigation } from "@/components/navigation"
 import { GlassCard } from "@/components/ui/glass-card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Sparkles, Moon, Star, Shuffle, Eye, Heart, X } from "lucide-react"
+import { createPortal } from "react-dom"
 
 const tarotCards = [
   { name: "The Fool", meaning: "New beginnings, innocence, spontaneity", image: "🃏" },
@@ -138,6 +139,68 @@ const zodiacSigns = [
       "Water signs dream of the mystical and spiritual. Dreams with fish, vast oceans, or ethereal beings indicate your connection to divine wisdom and universal love.",
   },
 ]
+
+function ZodiacModal({ zodiac, onClose }: { zodiac: any; onClose: () => void }) {
+  useEffect(() => {
+    // Prevent body scroll when modal is open
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = "unset"
+    }
+  }, [])
+
+  const modalContent = (
+    <div
+      className="fixed inset-0 w-screen h-screen bg-black backdrop-blur-sm flex items-center justify-center p-4"
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: "100vw",
+        height: "100vh",
+        zIndex: 9999,
+      }}
+    >
+      <GlassCard className="max-w-md w-full relative" glow>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="absolute top-2 right-2 text-gray-400 hover:text-white"
+          onClick={onClose}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+
+        <div className="text-center mb-6">
+          <div className="text-5xl mb-3">{zodiac.symbol}</div>
+          <h3 className="text-2xl font-bold text-purple-300 mb-1">{zodiac.name}</h3>
+          <p className="text-sm text-gray-400 mb-2">{zodiac.dates}</p>
+          <Badge className="bg-gradient-to-r from-purple-500/20 to-pink-500/20">{zodiac.element} Sign</Badge>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <h4 className="font-semibold text-yellow-300 mb-2 flex items-center">
+              <Star className="h-4 w-4 mr-2" />
+              Today's Horoscope
+            </h4>
+            <p className="text-gray-300 leading-relaxed text-sm">{zodiac.horoscope}</p>
+          </div>
+
+          <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg p-4">
+            <h5 className="font-medium text-purple-300 mb-2">Dream Guidance</h5>
+            <p className="text-xs text-gray-300">{zodiac.dreamGuidance}</p>
+          </div>
+        </div>
+      </GlassCard>
+    </div>
+  )
+
+  // Render modal at the root level using a portal
+  return typeof window !== "undefined" ? createPortal(modalContent, document.body) : null
+}
 
 export default function ReadingsPage() {
   const [selectedCards, setSelectedCards] = useState<any[]>([])
@@ -385,48 +448,11 @@ export default function ReadingsPage() {
               ))}
             </div>
           </GlassCard>
-
-          {/* Zodiac Horoscope Modal */}
-          {selectedZodiac && (
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <GlassCard className="max-w-md w-full relative" glow>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="absolute top-2 right-2 text-gray-400 hover:text-white"
-                  onClick={() => setSelectedZodiac(null)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-
-                <div className="text-center mb-6">
-                  <div className="text-5xl mb-3">{selectedZodiac.symbol}</div>
-                  <h3 className="text-2xl font-bold text-purple-300 mb-1">{selectedZodiac.name}</h3>
-                  <p className="text-sm text-gray-400 mb-2">{selectedZodiac.dates}</p>
-                  <Badge className="bg-gradient-to-r from-purple-500/20 to-pink-500/20">
-                    {selectedZodiac.element} Sign
-                  </Badge>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-semibold text-yellow-300 mb-2 flex items-center">
-                      <Star className="h-4 w-4 mr-2" />
-                      Today's Horoscope
-                    </h4>
-                    <p className="text-gray-300 leading-relaxed text-sm">{selectedZodiac.horoscope}</p>
-                  </div>
-
-                  <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg p-4">
-                    <h5 className="font-medium text-purple-300 mb-2">Dream Guidance</h5>
-                    <p className="text-xs text-gray-300">{selectedZodiac.dreamGuidance}</p>
-                  </div>
-                </div>
-              </GlassCard>
-            </div>
-          )}
         </div>
       </main>
+
+      {/* Zodiac Modal */}
+      {selectedZodiac && <ZodiacModal zodiac={selectedZodiac} onClose={() => setSelectedZodiac(null)} />}
     </div>
   )
 }

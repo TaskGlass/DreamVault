@@ -191,7 +191,7 @@ export default function InsightsPage() {
                     Flying appears most frequently in your dreams, indicating a strong desire for freedom and personal
                     growth. Water symbols suggest you're processing deep emotions.
                   </p>
-                  <Button size="sm" variant="outline">
+                  <Button size="sm" variant="outline" onClick={() => router.push("/insights/analysis")}>
                     View Full Analysis
                   </Button>
                 </div>
@@ -234,7 +234,7 @@ export default function InsightsPage() {
             </div>
 
             <div className="mt-6 text-center">
-              <Button variant="outline">
+              <Button variant="outline" onClick={() => router.push("/insights/timeline")}>
                 <Calendar className="h-4 w-4 mr-2" />
                 View Detailed Timeline
               </Button>

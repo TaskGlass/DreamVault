@@ -567,16 +567,6 @@ export default function DashboardPage() {
                   <blockquote className="text-base font-medium text-purple-300 mb-3">
                     "I trust my inner wisdom and embrace the messages my dreams bring to my conscious mind."
                   </blockquote>
-                  <Link href="/readings" scroll={true}>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => navigateToPage("/readings")}
-                      className="w-full sm:w-auto"
-                    >
-                      More Affirmations
-                    </Button>
-                  </Link>
                 </div>
               </GlassCard>
             </div>
