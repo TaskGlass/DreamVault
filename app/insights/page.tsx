@@ -70,9 +70,18 @@ export default function InsightsPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="week">This Week</SelectItem>
-                <SelectItem value="month">This Month</SelectItem>
-                <SelectItem value="year">This Year</SelectItem>
+                <SelectItem value="week">
+                  <span className="sm:hidden">Week</span>
+                  <span className="hidden sm:inline">This Week</span>
+                </SelectItem>
+                <SelectItem value="month">
+                  <span className="sm:hidden">Month</span>
+                  <span className="hidden sm:inline">This Month</span>
+                </SelectItem>
+                <SelectItem value="year">
+                  <span className="sm:hidden">Year</span>
+                  <span className="hidden sm:inline">This Year</span>
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
