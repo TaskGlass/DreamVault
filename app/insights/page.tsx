@@ -37,14 +37,7 @@ export default function InsightsPage() {
   const router = useRouter()
 
   const navigateToTechniques = () => {
-    router.push("/readings")
-    setTimeout(() => {
-      window.scrollTo(0, 0)
-    }, 100)
-  }
-
-  const navigateToMeditation = () => {
-    router.push("/readings")
+    router.push("/techniques")
     setTimeout(() => {
       window.scrollTo(0, 0)
     }, 100)
@@ -248,25 +241,15 @@ export default function InsightsPage() {
               Personalized Recommendations
             </h2>
 
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="p-4 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-xl">
-                <h3 className="font-semibold text-yellow-300 mb-2">Dream Enhancement</h3>
-                <p className="text-sm text-gray-300 mb-3">
-                  Based on your peaceful dream patterns, try lucid dreaming techniques to enhance your spiritual
-                  journey.
+            <div className="max-w-md mx-auto">
+              <div className="p-6 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-xl text-center">
+                <h3 className="font-semibold text-yellow-300 mb-3">Dream Enhancement</h3>
+                <p className="text-sm text-gray-300 mb-4">
+                  Based on your peaceful dream patterns, try lucid dreaming techniques to enhance your spiritual journey
+                  and gain deeper insights into your subconscious mind.
                 </p>
-                <Button size="sm" className="bg-yellow-600 hover:bg-yellow-700" onClick={navigateToTechniques}>
+                <Button className="bg-yellow-600 hover:bg-yellow-700" onClick={navigateToTechniques}>
                   Learn Techniques
-                </Button>
-              </div>
-
-              <div className="p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl">
-                <h3 className="font-semibold text-blue-300 mb-2">Meditation Focus</h3>
-                <p className="text-sm text-gray-300 mb-3">
-                  Your water symbols suggest focusing on emotional healing meditations before sleep.
-                </p>
-                <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={navigateToMeditation}>
-                  Start Meditation
                 </Button>
               </div>
             </div>

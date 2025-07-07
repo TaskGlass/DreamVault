@@ -129,7 +129,16 @@ export default function JournalPage() {
                   className={`cursor-pointer transition-all hover:glow ${
                     selectedEntry?.id === entry.id ? "ring-2 ring-purple-500/50" : ""
                   }`}
-                  onClick={() => setSelectedEntry(entry)}
+                  onClick={() => {
+                    setSelectedEntry(entry)
+                    // Auto-scroll to dream details section
+                    setTimeout(() => {
+                      const dreamDetailsSection = document.querySelector("[data-dream-details]")
+                      if (dreamDetailsSection) {
+                        dreamDetailsSection.scrollIntoView({ behavior: "smooth", block: "start" })
+                      }
+                    }, 100)
+                  }}
                 >
                   <div className="flex justify-between items-start mb-3">
                     <h3 className="font-semibold">{entry.title}</h3>
@@ -164,7 +173,7 @@ export default function JournalPage() {
             <div className="space-y-4">
               <h2 className="text-lg font-semibold">Dream Details</h2>
               {selectedEntry ? (
-                <GlassCard glow>
+                <GlassCard glow data-dream-details>
                   <div className="space-y-4">
                     <div className="flex justify-between items-start">
                       <h3 className="text-xl font-semibold text-purple-300">{selectedEntry.title}</h3>
@@ -199,20 +208,38 @@ export default function JournalPage() {
                     </div>
 
                     <div>
-                      <h4 className="font-medium mb-2">AI Interpretation</h4>
+                      <h4 className="font-medium mb-2">Dream Interpretation</h4>
                       <p className="text-gray-300 text-sm leading-relaxed">{selectedEntry.interpretation}</p>
                     </div>
 
-                    <div className="flex gap-2 pt-4">
-                      <Button size="sm" variant="outline">
-                        Edit Entry
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        Re-analyze
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        Share
-                      </Button>
+                    <div className="pt-4">
+                      <h4 className="font-medium mb-3 flex items-center">
+                        <Zap className="h-4 w-4 mr-2 text-yellow-400" />
+                        Actionable Steps
+                      </h4>
+                      <div className="space-y-3">
+                        <div className="p-3 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg">
+                          <h5 className="font-medium text-purple-300 mb-2">Reflect & Journal</h5>
+                          <p className="text-sm text-gray-300">
+                            Write about how the symbols in this dream might relate to your current life situation.
+                            Consider what your subconscious might be trying to tell you.
+                          </p>
+                        </div>
+                        <div className="p-3 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-lg">
+                          <h5 className="font-medium text-green-300 mb-2">Emotional Processing</h5>
+                          <p className="text-sm text-gray-300">
+                            Take time to sit with the emotions from this dream. Practice meditation or deep breathing to
+                            process any feelings that arose.
+                          </p>
+                        </div>
+                        <div className="p-3 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-lg">
+                          <h5 className="font-medium text-yellow-300 mb-2">Apply Insights</h5>
+                          <p className="text-sm text-gray-300">
+                            Consider how you can apply the wisdom from this dream to your waking life. What changes or
+                            actions might your dream be encouraging?
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </GlassCard>

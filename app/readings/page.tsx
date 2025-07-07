@@ -213,6 +213,21 @@ export default function ReadingsPage() {
   const moonRef = useRef<HTMLDivElement>(null)
   const affirmationRef = useRef<HTMLDivElement>(null)
 
+  // Add this useEffect after the existing state declarations
+  useEffect(() => {
+    // Show horoscope by default when page loads
+    getHoroscope()
+
+    // Check if user came from dashboard wanting to see horoscope
+    const showHoroscope = sessionStorage.getItem("showHoroscope")
+    if (showHoroscope) {
+      sessionStorage.removeItem("showHoroscope")
+      setTimeout(() => {
+        horoscopeRef.current?.scrollIntoView({ behavior: "smooth" })
+      }, 100)
+    }
+  }, [])
+
   const drawTarotCards = () => {
     setIsDrawing(true)
     setTimeout(() => {
@@ -241,10 +256,7 @@ export default function ReadingsPage() {
   }
 
   const scrollToHoroscope = () => {
-    getHoroscope()
-    setTimeout(() => {
-      horoscopeRef.current?.scrollIntoView({ behavior: "smooth" })
-    }, 100)
+    horoscopeRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
   const scrollToMoon = () => {
@@ -359,34 +371,32 @@ export default function ReadingsPage() {
           </GlassCard>
 
           {/* Horoscope */}
-          {currentHoroscope && (
-            <GlassCard ref={horoscopeRef} glow>
-              <h2 className="text-xl font-semibold mb-4 flex items-center">
-                <Star className="h-5 w-5 mr-2 text-yellow-400" />
-                Your Horoscope
-              </h2>
+          <GlassCard ref={horoscopeRef} glow>
+            <h2 className="text-xl font-semibold mb-4 flex items-center">
+              <Star className="h-5 w-5 mr-2 text-yellow-400" />
+              Your Horoscope
+            </h2>
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="text-3xl mr-3">♌</div>
-                    <div>
-                      <h3 className="font-semibold text-yellow-300">{currentHoroscope.sign}</h3>
-                      <p className="text-sm text-gray-400">{currentHoroscope.date}</p>
-                    </div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="text-3xl mr-3">♌</div>
+                  <div>
+                    <h3 className="font-semibold text-yellow-300">{currentHoroscope?.sign}</h3>
+                    <p className="text-sm text-gray-400">{currentHoroscope?.date}</p>
                   </div>
-                  <Badge className="bg-yellow-500/20 text-yellow-300">Lucky Color: {currentHoroscope.lucky}</Badge>
                 </div>
-
-                <p className="text-gray-300 leading-relaxed">{currentHoroscope.reading}</p>
-
-                <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-lg p-4">
-                  <h4 className="font-medium text-yellow-300 mb-2">Cosmic Advice</h4>
-                  <p className="text-sm text-gray-300">{currentHoroscope.advice}</p>
-                </div>
+                <Badge className="bg-yellow-500/20 text-yellow-300">Lucky Color: {currentHoroscope?.lucky}</Badge>
               </div>
-            </GlassCard>
-          )}
+
+              <p className="text-gray-300 leading-relaxed">{currentHoroscope?.reading}</p>
+
+              <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-lg p-4">
+                <h4 className="font-medium text-yellow-300 mb-2">Cosmic Advice</h4>
+                <p className="text-sm text-gray-300">{currentHoroscope?.advice}</p>
+              </div>
+            </div>
+          </GlassCard>
 
           {/* Moon Phase */}
           <GlassCard ref={moonRef}>

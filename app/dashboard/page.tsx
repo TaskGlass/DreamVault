@@ -504,7 +504,11 @@ export default function DashboardPage() {
                     <Button
                       size="sm"
                       className="w-full bg-gradient-to-r from-purple-600 to-blue-600 mt-4 sm:mt-8"
-                      onClick={() => navigateToPage("/readings")}
+                      onClick={() => {
+                        navigateToPage("/readings")
+                        // Set a flag to show horoscope on readings page
+                        sessionStorage.setItem("showHoroscope", "true")
+                      }}
                     >
                       <Star className="h-4 w-4 mr-2" />
                       Full Reading
