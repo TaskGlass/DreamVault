@@ -70,7 +70,9 @@ const features = [
 const plans = [
   {
     name: "Dream Lite",
-    price: "Free",
+    monthlyPrice: "Free",
+    annualPrice: "Free",
+    annualDisplay: "Free",
     icon: Sparkles,
     color: "text-gray-400",
     features: [
@@ -83,7 +85,10 @@ const plans = [
   },
   {
     name: "Lucid Explorer",
-    price: "$9/month",
+    monthlyPrice: "$9/month",
+    annualPrice: "$5/month",
+    annualDisplay: "$60/year",
+    annualSavings: "Save $48/year",
     icon: Zap,
     color: "text-purple-400",
     popular: true,
@@ -99,7 +104,10 @@ const plans = [
   },
   {
     name: "Astral Voyager",
-    price: "$19/month",
+    monthlyPrice: "$19/month",
+    annualPrice: "$9/month",
+    annualDisplay: "$108/year",
+    annualSavings: "Save $120/year",
     icon: Crown,
     color: "text-yellow-400",
     features: [
@@ -135,6 +143,7 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showLoginPassword, setShowLoginPassword] = useState(false)
+  const [billingCycle, setBillingCycle] = useState("monthly")
 
   useEffect(() => {
     const handleScroll = () => {
@@ -630,6 +639,43 @@ export default function LandingPage() {
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">Start free and upgrade as your journey deepens</p>
           </div>
 
+          {/* Billing Toggle */}
+          <div className="flex justify-center mb-8">
+            <div className="bg-white/5 rounded-xl p-1 border border-white/10">
+              <div className="flex">
+                <Button
+                  variant={billingCycle === "monthly" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setBillingCycle("monthly")}
+                  className={`px-6 py-2 rounded-lg transition-all ${
+                    billingCycle === "monthly"
+                      ? "bg-purple-600 text-white shadow-lg"
+                      : "text-gray-300 hover:text-white hover:bg-white/10"
+                  }`}
+                >
+                  Monthly
+                </Button>
+                <div className="relative">
+                  <Button
+                    variant={billingCycle === "annual" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setBillingCycle("annual")}
+                    className={`px-6 py-2 rounded-lg transition-all ${
+                      billingCycle === "annual"
+                        ? "bg-purple-600 text-white shadow-lg"
+                        : "text-gray-300 hover:text-white hover:bg-white/10"
+                    }`}
+                  >
+                    Annual
+                  </Button>
+                  <Badge className="absolute -top-3 -right-3 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                    Save 17%
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {plans.map((plan, index) => (
               <div
@@ -647,9 +693,17 @@ export default function LandingPage() {
 
                 <plan.icon className={`h-12 w-12 ${plan.color} mx-auto mb-4`} />
                 <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                <p className="text-3xl font-bold mb-6">{plan.price}</p>
+                <p className="text-3xl font-bold mb-2">
+                  {billingCycle === "monthly" ? plan.monthlyPrice : plan.annualPrice}
+                </p>
+                {billingCycle === "annual" && plan.annualDisplay && plan.name !== "Dream Lite" && (
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-400">{plan.annualDisplay}</p>
+                    {plan.annualSavings && <p className="text-sm text-green-400 font-medium">{plan.annualSavings}</p>}
+                  </div>
+                )}
 
-                <ul className="space-y-3 mb-8 flex-grow">
+                <ul className="space-y-3 mb-6 flex-grow">
                   {plan.features.map((feature, featureIndex) => (
                     <li key={featureIndex} className="flex items-center text-sm">
                       <Check className="h-4 w-4 text-green-400 mr-3 flex-shrink-0" />
