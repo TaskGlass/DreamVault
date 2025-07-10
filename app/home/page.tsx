@@ -668,7 +668,7 @@ export default function LandingPage() {
                   >
                     Annual
                   </Button>
-                  <Badge className="absolute -top-3 -right-3 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                  <Badge className="absolute -top-4 -right-4 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
                     Save 17%
                   </Badge>
                 </div>
