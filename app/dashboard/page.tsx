@@ -434,8 +434,10 @@ export default function DashboardPage() {
                       className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer gap-2 sm:gap-0"
                     >
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-medium truncate">{dream.title}</h3>
-                        <p className="text-base text-gray-400">{new Date(dream.date).toLocaleDateString()}</p>
+                        <h3 className="text-base sm:text-lg font-medium truncate">{dream.title}</h3>
+                        <p className="text-sm sm:text-base text-gray-400">
+                          {new Date(dream.date).toLocaleDateString()}
+                        </p>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {dream.symbols.slice(0, 2).map((symbol, index) => (
                             <Badge key={index} variant="outline" className="text-xs">

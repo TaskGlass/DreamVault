@@ -241,10 +241,31 @@ export default function ReadingsPage() {
     setCurrentHoroscope({
       sign: "Leo",
       date: "Today",
+      symbol: "♌",
+      element: "Fire",
+      rulingPlanet: "Sun",
       reading:
-        "The stars align to bring clarity to your dreams today. Trust your intuition as it guides you toward new opportunities. Your creative energy is particularly strong, making this an ideal time for artistic pursuits or innovative problem-solving.",
-      lucky: "Purple",
-      advice: "Listen to your inner voice and pay attention to recurring symbols in your dreams.",
+        "The Sun's radiant energy illuminates your path today, dear Leo. Your natural magnetism and creative fire are at their peak, drawing opportunities and admirers into your orbit. The cosmic energies are aligning to support your artistic endeavors and leadership qualities. This is a powerful day for self-expression and stepping into your authentic power.",
+      love: "Venus whispers sweet possibilities in your romantic sector. Single Leos may find themselves captivated by someone who appreciates their unique brilliance. Coupled Leos should focus on grand gestures and heartfelt communication. Your partner craves your attention and admiration - don't hold back on the compliments.",
+      career:
+        "Your professional life sparkles with potential today. The Sun's influence brings recognition for your hard work and creative contributions. A leadership opportunity may present itself, or you might find yourself naturally taking charge of a project. Trust your instincts when making important decisions.",
+      health:
+        "Your vitality runs high, but remember that even the Sun needs to set. Balance your fiery energy with moments of rest and reflection. Pay attention to your heart - both literally and metaphorically. Cardiovascular exercise will serve you well today.",
+      lucky: "Golden Yellow",
+      luckyNumbers: [3, 7, 19, 28],
+      bestTime: "11:00 AM - 1:00 PM",
+      moonPhase: "Waxing Gibbous in Sagittarius",
+      planetaryInfluence:
+        "The Sun in your sign amplifies your natural charisma, while Mercury enhances your communication skills. Jupiter's supportive aspect brings expansion and good fortune.",
+      dreamSymbols: [
+        "Golden lions",
+        "Bright sunlight",
+        "Crowns or royal imagery",
+        "Stage performances",
+        "Fire or flames",
+      ],
+      advice:
+        "Embrace your inner royalty today, Leo. The universe is your stage, and you are the star. Don't dim your light for anyone - your authentic self is your greatest gift to the world. Pay special attention to dreams featuring gold, lions, or performance themes, as they carry messages about your true calling and creative potential.",
     })
   }
 
@@ -372,28 +393,126 @@ export default function ReadingsPage() {
 
           {/* Horoscope */}
           <GlassCard ref={horoscopeRef} glow>
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
+            <h2 className="text-xl font-semibold mb-6 flex items-center">
               <Star className="h-5 w-5 mr-2 text-yellow-400" />
               Your Horoscope
             </h2>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
+              {/* Header Section */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <div className="text-3xl mr-3">♌</div>
+                  <div className="text-4xl mr-4">{currentHoroscope?.symbol}</div>
                   <div>
-                    <h3 className="font-semibold text-yellow-300">{currentHoroscope?.sign}</h3>
+                    <h3 className="text-2xl font-bold text-yellow-300">{currentHoroscope?.sign}</h3>
                     <p className="text-sm text-gray-400">{currentHoroscope?.date}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge className="bg-orange-500/20 text-orange-300">{currentHoroscope?.element} Sign</Badge>
+                      <Badge className="bg-yellow-500/20 text-yellow-300">
+                        Ruled by {currentHoroscope?.rulingPlanet}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
-                <Badge className="bg-yellow-500/20 text-yellow-300">Lucky Color: {currentHoroscope?.lucky}</Badge>
               </div>
 
-              <p className="text-gray-300 leading-relaxed">{currentHoroscope?.reading}</p>
+              {/* Main Reading */}
+              <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-lg p-6">
+                <h4 className="font-semibold text-yellow-300 mb-3 flex items-center">
+                  <Star className="h-4 w-4 mr-2" />
+                  Daily Overview
+                </h4>
+                <p className="text-gray-300 leading-relaxed">{currentHoroscope?.reading}</p>
+              </div>
 
-              <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-lg p-4">
-                <h4 className="font-medium text-yellow-300 mb-2">Cosmic Advice</h4>
-                <p className="text-sm text-gray-300">{currentHoroscope?.advice}</p>
+              {/* Life Areas Grid */}
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="bg-gradient-to-br from-pink-500/10 to-red-500/10 rounded-lg p-4">
+                  <h5 className="font-medium text-pink-300 mb-2 flex items-center">
+                    <Heart className="h-4 w-4 mr-2" />
+                    Love & Relationships
+                  </h5>
+                  <p className="text-xs text-gray-300 leading-relaxed">{currentHoroscope?.love}</p>
+                </div>
+
+                <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-lg p-4">
+                  <h5 className="font-medium text-green-300 mb-2 flex items-center">
+                    <Star className="h-4 w-4 mr-2" />
+                    Career & Finance
+                  </h5>
+                  <p className="text-xs text-gray-300 leading-relaxed">{currentHoroscope?.career}</p>
+                </div>
+
+                <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-lg p-4">
+                  <h5 className="font-medium text-blue-300 mb-2 flex items-center">
+                    <Heart className="h-4 w-4 mr-2" />
+                    Health & Wellness
+                  </h5>
+                  <p className="text-xs text-gray-300 leading-relaxed">{currentHoroscope?.health}</p>
+                </div>
+              </div>
+
+              {/* Lucky Elements */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-gradient-to-r from-purple-500/10 to-indigo-500/10 rounded-lg p-4">
+                  <h5 className="font-medium text-purple-300 mb-3">Lucky Elements</h5>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Color:</span>
+                      <span className="text-yellow-300">{currentHoroscope?.lucky}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Numbers:</span>
+                      <span className="text-yellow-300">{currentHoroscope?.luckyNumbers?.join(", ")}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Best Time:</span>
+                      <span className="text-yellow-300">{currentHoroscope?.bestTime}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-lg p-4">
+                  <h5 className="font-medium text-indigo-300 mb-3">Cosmic Influences</h5>
+                  <div className="space-y-2 text-sm">
+                    <div>
+                      <span className="text-gray-400">Moon Phase:</span>
+                      <p className="text-indigo-300 text-xs">{currentHoroscope?.moonPhase}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Planetary Energy:</span>
+                      <p className="text-indigo-300 text-xs">{currentHoroscope?.planetaryInfluence}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dream Guidance */}
+              <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg p-6">
+                <h5 className="font-medium text-purple-300 mb-3 flex items-center">
+                  <Moon className="h-4 w-4 mr-2" />
+                  Dream Symbols to Watch For
+                </h5>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {currentHoroscope?.dreamSymbols?.map((symbol, index) => (
+                    <Badge key={index} className="bg-purple-500/20 text-purple-200 text-xs">
+                      {symbol}
+                    </Badge>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-300 leading-relaxed">
+                  These symbols in your dreams carry special significance for your sign today. Pay attention to their
+                  context and emotions they evoke.
+                </p>
+              </div>
+
+              {/* Cosmic Advice */}
+              <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-lg p-6">
+                <h4 className="font-medium text-yellow-300 mb-3 flex items-center">
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Cosmic Guidance
+                </h4>
+                <p className="text-sm text-gray-300 leading-relaxed">{currentHoroscope?.advice}</p>
               </div>
             </div>
           </GlassCard>

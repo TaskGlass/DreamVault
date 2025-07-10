@@ -182,7 +182,7 @@ export default function TechniquesPage() {
       <Navigation />
 
       <main className="pt-8 pb-28 md:ml-72 md:pb-8">
-        <div className="p-3 sm:p-4 space-y-4 sm:space-y-6">
+        <div className="p-4 space-y-4 sm:space-y-6">
           {/* Back Button */}
           <div className="mb-4">
             <Button variant="ghost" size="sm" onClick={() => router.back()} className="text-gray-400 hover:text-white">
