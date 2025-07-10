@@ -740,6 +740,21 @@ export default function LandingPage() {
               <span className="text-xl font-bold text-glow">DreamVault</span>
             </Link>
 
+            {/* Customer Service Contact */}
+            <div className="flex flex-col items-center md:items-start mb-4 md:mb-0 text-sm text-gray-400">
+              <div className="mb-1">
+                <span className="text-gray-300">Customer Service:</span>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-1 sm:space-y-0 text-center md:text-left">
+                <a href="mailto:support@dreamvault.ai" className="hover:text-purple-400 transition-colors">
+                  support@dreamvault.ai
+                </a>
+                <a href="tel:+18336200635" className="hover:text-purple-400 transition-colors">
+                  +1 (833) 620-0635
+                </a>
+              </div>
+            </div>
+
             <div className="flex space-x-6 text-sm text-gray-400">
               <Link href="/privacy" onClick={() => window.scrollTo(0, 0)}>
                 <button className="hover:text-purple-400">Privacy Policy</button>
