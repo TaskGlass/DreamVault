@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Navigation } from "@/components/navigation"
 import { GlassCard } from "@/components/ui/glass-card"
 import { Button } from "@/components/ui/button"
@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { User, Camera, Star, Crown, Zap, Settings, Bell, Moon, Heart, Calendar } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { supabase } from "@/lib/supabaseClient"
 
 const zodiacSigns = [
   { name: "Aries", symbol: "♈", dates: "Mar 21 - Apr 19" },
@@ -29,42 +30,91 @@ const zodiacSigns = [
 ]
 
 export default function ProfilePage() {
-  const [profile, setProfile] = useState({
-    name: "Luna Starweaver",
-    email: "luna@dreamvault.com",
-    birthday: "1995-08-15",
-    zodiacSign: "Leo",
-    bio: "Exploring the mysteries of the subconscious mind through dream interpretation and spiritual guidance.",
-    notifications: true,
-    dreamReminders: true,
-    weeklyReports: false,
-  })
-
+  const [profile, setProfile] = useState<any>(null)
+  const [currentPlan, setCurrentPlan] = useState<any>(null)
   const [isEditing, setIsEditing] = useState(false)
   const { toast } = useToast()
 
-  const handleSave = () => {
-    setIsEditing(false)
-    toast({
-      title: "Profile updated",
-      description: "Your changes have been saved successfully.",
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const user = (await supabase.auth.getUser()).data.user
+      if (!user) return
+      // Fetch profile
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+      
+      if (profileData) {
+        // Handle backward compatibility - if first_name/last_name are empty but name exists, parse it
+        if (!profileData.first_name && !profileData.last_name && profileData.name) {
+          const nameParts = profileData.name.trim().split(' ')
+          profileData.first_name = nameParts[0] || ''
+          profileData.last_name = nameParts.slice(1).join(' ') || ''
+        }
+        setProfile(profileData)
+      }
+      
+      // Fetch subscription
+      const { data: subData } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+      setCurrentPlan(subData)
+    }
+    fetchProfile()
+  }, [])
+
+  const handleSave = async () => {
+    if (!profile?.id) return;
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        name: `${profile.first_name} ${profile.last_name}`.trim(), // Keep name field for compatibility
+        email: profile.email,
+        birthday: profile.birthday,
+        zodiac: profile.zodiac,
+        bio: profile.bio,
+        notifications: profile.notifications,
+        dream_reminders: profile.dream_reminders,
+        weekly_reports: profile.weekly_reports,
+      })
+      .eq("id", profile.id);
+    setIsEditing(false);
+    if (error) {
+      toast({
+        title: "Update failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Profile updated",
+        description: "Your changes have been saved successfully.",
+      });
+    }
+  }
+
+  const handleUpgrade = async (plan: string) => {
+    if (!profile?.email) return
+    const res = await fetch('/api/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: profile.email, plan }),
     })
+    const data = await res.json()
+    if (data.url) {
+      window.location.href = data.url
+    }
   }
 
-  const currentPlan = {
-    name: "Lucid Explorer",
-    price: "$9/month",
-    icon: Zap,
-    color: "text-purple-400",
-    features: [
-      "15 interpretations & tarot readings/month",
-      "Advanced insights",
-      "Daily affirmations",
-      "Priority support",
-    ],
-  }
-
-  const selectedZodiac = zodiacSigns.find((sign) => sign.name === profile.zodiacSign)
+  const selectedZodiac = zodiacSigns.find((sign) => sign.name === profile?.zodiac)
 
   return (
     <div className="min-h-screen">
@@ -119,16 +169,31 @@ export default function ProfilePage() {
               <div className="flex-1 text-center lg:text-left space-y-4 min-w-0">
                 {isEditing ? (
                   <div className="space-y-4 max-w-md mx-auto lg:mx-0">
-                    <div>
-                      <Label htmlFor="name" className="text-sm font-medium text-gray-300">
-                        Name
-                      </Label>
-                      <Input
-                        id="name"
-                        value={profile.name}
-                        onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                        className="bg-white/5 border-white/10 mt-1"
-                      />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="first_name" className="text-sm font-medium text-gray-300">
+                          First Name
+                        </Label>
+                        <Input
+                          id="first_name"
+                          value={profile?.first_name || ''}
+                          onChange={(e) => setProfile({ ...profile, first_name: e.target.value })}
+                          className="bg-white/5 border-white/10 mt-1"
+                          placeholder="Enter first name"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="last_name" className="text-sm font-medium text-gray-300">
+                          Last Name
+                        </Label>
+                        <Input
+                          id="last_name"
+                          value={profile?.last_name || ''}
+                          onChange={(e) => setProfile({ ...profile, last_name: e.target.value })}
+                          className="bg-white/5 border-white/10 mt-1"
+                          placeholder="Enter last name"
+                        />
+                      </div>
                     </div>
                     <div>
                       <Label htmlFor="email" className="text-sm font-medium text-gray-300">
@@ -137,7 +202,7 @@ export default function ProfilePage() {
                       <Input
                         id="email"
                         type="email"
-                        value={profile.email}
+                        value={profile?.email}
                         onChange={(e) => setProfile({ ...profile, email: e.target.value })}
                         className="bg-white/5 border-white/10 mt-1"
                       />
@@ -146,8 +211,13 @@ export default function ProfilePage() {
                 ) : (
                   <div className="space-y-4">
                     <div>
-                      <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">{profile.name}</h2>
-                      <p className="text-gray-300 text-lg">{profile.email}</p>
+                      <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">
+                        {profile?.first_name && profile?.last_name 
+                          ? `${profile.first_name} ${profile.last_name}`
+                          : profile?.name || 'Your Name'
+                        }
+                      </h2>
+                      <p className="text-gray-300 text-lg">{profile?.email}</p>
                     </div>
                     <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
                       <Badge className="bg-purple-500/20 text-purple-200 border-purple-400/30 px-3 py-1 text-sm font-medium">
@@ -166,19 +236,20 @@ export default function ProfilePage() {
                 <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-500/15 to-blue-500/15 border border-purple-400/20 backdrop-blur-sm min-w-[200px]">
                   <div className="text-center space-y-4">
                     <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-purple-500/30 to-blue-500/30 flex items-center justify-center">
-                      <currentPlan.icon className={`h-8 w-8 ${currentPlan.color}`} />
+                      <Zap className={`h-8 w-8 ${currentPlan?.plan_name === "Astral Voyager" ? "text-purple-400" : "text-blue-400"}`} />
                     </div>
                     <div>
-                      <h3 className="font-bold text-white text-lg">{currentPlan.name}</h3>
-                      <p className="text-gray-300 font-medium">{currentPlan.price}</p>
+                      <h3 className="font-bold text-white text-lg">{currentPlan?.plan_name}</h3>
+                      <p className="text-gray-300 font-medium">{currentPlan?.price}</p>
                     </div>
                     <Button
                       size="sm"
                       variant="outline"
-                      className="w-full bg-white/5 border-white/20 hover:bg-white/10 text-white font-medium"
-                    >
-                      Manage Plan
-                    </Button>
+                      className="w-full bg-white/5 border-white/20 hover:bg-white/10 text-white font-medium mt-2" onClick={() => handleUpgrade('Lucid Explorer')}>Upgrade to Lucid Explorer</Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full bg-white/5 border-white/20 hover:bg-white/10 text-white font-medium mt-2" onClick={() => handleUpgrade('Astral Voyager')}>Upgrade to Astral Voyager</Button>
                   </div>
                 </div>
               </div>
@@ -200,14 +271,14 @@ export default function ProfilePage() {
                     <Input
                       id="birthday"
                       type="date"
-                      value={profile.birthday}
+                      value={profile?.birthday}
                       onChange={(e) => setProfile({ ...profile, birthday: e.target.value })}
                       className="bg-white/5 border-white/10"
                     />
                   ) : (
                     <div className="flex items-center mt-2">
                       <Calendar className="h-4 w-4 text-gray-400 mr-2" />
-                      <span>{new Date(profile.birthday).toLocaleDateString()}</span>
+                      <span>{new Date(profile?.birthday).toLocaleDateString()}</span>
                     </div>
                   )}
                 </div>
@@ -216,8 +287,8 @@ export default function ProfilePage() {
                   <Label htmlFor="zodiac">Zodiac Sign</Label>
                   {isEditing ? (
                     <Select
-                      value={profile.zodiacSign}
-                      onValueChange={(value) => setProfile({ ...profile, zodiacSign: value })}
+                      value={profile?.zodiac}
+                      onValueChange={(value) => setProfile({ ...profile, zodiac: value })}
                     >
                       <SelectTrigger className="bg-white/5 border-white/10">
                         <SelectValue />
@@ -247,13 +318,13 @@ export default function ProfilePage() {
                 {isEditing ? (
                   <Textarea
                     id="bio"
-                    value={profile.bio}
+                    value={profile?.bio}
                     onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
                     className="bg-white/5 border-white/10 min-h-24"
                     placeholder="Share your spiritual interests and dream goals..."
                   />
                 ) : (
-                  <p className="text-gray-300 mt-2 leading-relaxed">{profile.bio}</p>
+                  <p className="text-gray-300 mt-2 leading-relaxed">{profile?.bio}</p>
                 )}
               </div>
             </div>
@@ -270,7 +341,7 @@ export default function ProfilePage() {
               <div>
                 <h3 className="font-semibold mb-4">Current Plan Features</h3>
                 <ul className="space-y-2">
-                  {currentPlan.features.map((feature, index) => (
+                  {currentPlan?.features?.split(',').map((feature: string, index: number) => (
                     <li key={index} className="flex items-center text-sm">
                       <div className="w-2 h-2 bg-purple-400 rounded-full mr-3" />
                       {feature}
@@ -298,26 +369,26 @@ export default function ProfilePage() {
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm">Dream Interpretations</span>
-                      <span className="text-sm font-medium">5/15</span>
+                      <span className="text-sm font-medium">{currentPlan?.dream_interpretations_remaining || 0}/15</span>
                     </div>
                     <div className="w-full bg-white/5 rounded-full h-2">
-                      <div className="bg-purple-500 h-2 rounded-full" style={{ width: "33%" }} />
+                      <div className="bg-purple-500 h-2 rounded-full" style={{ width: `${(currentPlan?.dream_interpretations_remaining || 0) / 15 * 100}%` }} />
                     </div>
                   </div>
 
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm">Tarot Readings</span>
-                      <span className="text-sm font-medium">3/15</span>
+                      <span className="text-sm font-medium">{currentPlan?.tarot_readings_remaining || 0}/15</span>
                     </div>
                     <div className="w-full bg-white/5 rounded-full h-2">
-                      <div className="bg-blue-500 h-2 rounded-full" style={{ width: "20%" }} />
+                      <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${(currentPlan?.tarot_readings_remaining || 0) / 15 * 100}%` }} />
                     </div>
                   </div>
 
                   <div className="p-3 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-lg">
                     <p className="text-sm text-green-300">
-                      Great usage! You have 10 dream interpretations and 12 tarot readings remaining this month.
+                      Great usage! You have {currentPlan?.dream_interpretations_remaining || 0} dream interpretations and {currentPlan?.tarot_readings_remaining || 0} tarot readings remaining this month.
                     </p>
                   </div>
                 </div>
@@ -342,7 +413,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
                 <Switch
-                  checked={profile.notifications}
+                  checked={profile?.notifications}
                   onCheckedChange={(checked) => setProfile({ ...profile, notifications: checked })}
                 />
               </div>
@@ -356,8 +427,8 @@ export default function ProfilePage() {
                   </div>
                 </div>
                 <Switch
-                  checked={profile.dreamReminders}
-                  onCheckedChange={(checked) => setProfile({ ...profile, dreamReminders: checked })}
+                  checked={profile?.dream_reminders}
+                  onCheckedChange={(checked) => setProfile({ ...profile, dream_reminders: checked })}
                 />
               </div>
 
@@ -370,8 +441,8 @@ export default function ProfilePage() {
                   </div>
                 </div>
                 <Switch
-                  checked={profile.weeklyReports}
-                  onCheckedChange={(checked) => setProfile({ ...profile, weeklyReports: checked })}
+                  checked={profile?.weekly_reports}
+                  onCheckedChange={(checked) => setProfile({ ...profile, weekly_reports: checked })}
                 />
               </div>
             </div>

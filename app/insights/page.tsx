@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Navigation } from "@/components/navigation"
 import { GlassCard } from "@/components/ui/glass-card"
 import { Button } from "@/components/ui/button"
@@ -8,33 +8,74 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { BarChart3, TrendingUp, Calendar, Heart, Moon, Zap, Eye, Star } from "lucide-react"
 import { useRouter } from "next/navigation"
-
-const moodData = [
-  { mood: "Peaceful", count: 12, color: "bg-blue-500", percentage: 35 },
-  { mood: "Curious", count: 8, color: "bg-green-500", percentage: 24 },
-  { mood: "Anxious", count: 6, color: "bg-red-500", percentage: 18 },
-  { mood: "Hopeful", count: 5, color: "bg-purple-500", percentage: 15 },
-  { mood: "Confused", count: 3, color: "bg-orange-500", percentage: 8 },
-]
-
-const symbolData = [
-  { symbol: "Flying", count: 15, meaning: "Freedom and ambition" },
-  { symbol: "Water", count: 12, meaning: "Emotions and cleansing" },
-  { symbol: "Animals", count: 9, meaning: "Instincts and nature" },
-  { symbol: "Light", count: 8, meaning: "Guidance and clarity" },
-  { symbol: "Maze", count: 6, meaning: "Life challenges" },
-]
-
-const weeklyData = [
-  { week: "Week 1", dreams: 3, mood: "Peaceful" },
-  { week: "Week 2", dreams: 5, mood: "Curious" },
-  { week: "Week 3", dreams: 2, mood: "Anxious" },
-  { week: "Week 4", dreams: 4, mood: "Hopeful" },
-]
+import { supabase } from "@/lib/supabaseClient"
 
 export default function InsightsPage() {
   const [timeRange, setTimeRange] = useState("month")
   const router = useRouter()
+  const [dreams, setDreams] = useState<any[]>([])
+  const [moodData, setMoodData] = useState<any[]>([])
+  const [symbolData, setSymbolData] = useState<any[]>([])
+  const [weeklyData, setWeeklyData] = useState<any[]>([])
+  const [stats, setStats] = useState({ total: 0, dominantMood: '', topSymbol: '', topSymbolPercentage: 0 })
+
+  useEffect(() => {
+    const fetchDreams = async () => {
+      const user = (await supabase.auth.getUser()).data.user
+      if (!user) return
+      const { data: dreams } = await supabase
+        .from('dreams')
+        .select('*')
+        .eq('user_id', user.id)
+      setDreams(dreams || [])
+      // Mood analysis
+      const moodCounts: Record<string, number> = {}
+      const symbolCounts: Record<string, number> = {}
+      const weekMap: Record<string, { dreams: number; mood: string }> = {}
+      dreams?.forEach(d => {
+        if (d.mood) moodCounts[d.mood] = (moodCounts[d.mood] || 0) + 1
+        if (d.symbols) d.symbols.forEach((s: string) => symbolCounts[s] = (symbolCounts[s] || 0) + 1)
+        // Weekly grouping
+        const week = new Date(d.date)
+        const weekNum = `${week.getFullYear()}-W${Math.ceil((week.getDate() + 6 - week.getDay()) / 7)}`
+        if (!weekMap[weekNum]) weekMap[weekNum] = { dreams: 0, mood: d.mood }
+        weekMap[weekNum].dreams++
+      })
+      // Prepare mood data
+      const moodArr = Object.entries(moodCounts).map(([mood, count]) => ({
+        mood,
+        count,
+        color: '', // Optionally map to color
+        percentage: dreams && dreams.length > 0 ? Math.round((count / dreams.length) * 100) : 0,
+      }))
+      setMoodData(moodArr)
+      // Prepare symbol data
+      const symbolArr = Object.entries(symbolCounts).map(([symbol, count]) => ({
+        symbol,
+        count,
+        meaning: '', // Optionally use OpenAI or a lookup for meaning
+      }))
+      setSymbolData(symbolArr)
+      // Prepare weekly data
+      const weekArr = Object.entries(weekMap).map(([week, { dreams, mood }]) => ({
+        week,
+        dreams,
+        mood,
+      }))
+      setWeeklyData(weekArr)
+      // Stats
+      const dominantMood = moodArr.sort((a, b) => b.count - a.count)[0]?.mood || ''
+      const topSymbolData = symbolArr.sort((a, b) => b.count - a.count)[0]
+      const rawTopSymbol = topSymbolData?.symbol || ''
+      // Truncate top symbol to 1-2 words max
+      const topSymbol = rawTopSymbol.split(' ').slice(0, 2).join(' ')
+      const topSymbolPercentage = topSymbolData && dreams && dreams.length > 0 
+        ? Math.round((topSymbolData.count / dreams.length) * 100) 
+        : 0
+      setStats({ total: dreams?.length || 0, dominantMood, topSymbol, topSymbolPercentage })
+    }
+    fetchDreams()
+  }, [timeRange])
 
   const navigateToTechniques = () => {
     router.push("/techniques")
@@ -83,7 +124,7 @@ export default function InsightsPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <GlassCard className="text-center">
               <Moon className="h-8 w-8 text-blue-400 mx-auto mb-3" />
-              <p className="text-2xl font-bold">34</p>
+              <p className="text-2xl font-bold">{stats.total}</p>
               <p className="text-sm text-gray-400">Total Dreams</p>
               <div className="flex items-center justify-center mt-2">
                 <TrendingUp className="h-3 w-3 text-green-400 mr-1" />
@@ -103,16 +144,18 @@ export default function InsightsPage() {
 
             <GlassCard className="text-center">
               <Heart className="h-8 w-8 text-pink-400 mx-auto mb-3" />
-              <p className="text-2xl font-bold">Peaceful</p>
+              <p className="text-2xl font-bold">{stats.dominantMood}</p>
               <p className="text-sm text-gray-400">Dominant Mood</p>
               <Badge className="mt-2 bg-blue-500/20 text-blue-300 text-xs">35%</Badge>
             </GlassCard>
 
             <GlassCard className="text-center">
               <Zap className="h-8 w-8 text-yellow-400 mx-auto mb-3" />
-              <p className="text-2xl font-bold">Flying</p>
+              <p className="text-2xl font-bold">{stats.topSymbol}</p>
               <p className="text-sm text-gray-400">Top Symbol</p>
-              <Badge className="mt-2 bg-yellow-500/20 text-yellow-300 text-xs">44%</Badge>
+              <Badge className="mt-2 bg-yellow-500/20 text-yellow-300 text-xs">
+                {stats.topSymbolPercentage || 0}%
+              </Badge>
             </GlassCard>
           </div>
 

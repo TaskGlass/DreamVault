@@ -1,132 +1,73 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Navigation } from "@/components/navigation"
 import { GlassCard } from "@/components/ui/glass-card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Eye, Brain, TrendingUp, Star, Lightbulb } from "lucide-react"
 import { useRouter } from "next/navigation"
-
-const symbolAnalysis = [
-  {
-    symbol: "Flying",
-    frequency: 15,
-    percentage: 44,
-    meaning: "Freedom and transcendence",
-    interpretation:
-      "Your frequent flying dreams indicate a strong desire for liberation from current constraints. This symbol often appears when you're seeking to rise above challenges or gain a new perspective on life situations.",
-    psychologicalMeaning:
-      "Represents your aspiration for personal growth and the need to break free from limiting beliefs or circumstances.",
-    spiritualMeaning:
-      "Flying symbolizes your soul's journey toward enlightenment and your connection to higher consciousness.",
-    actionableInsights: [
-      "Consider what areas of your life feel restrictive",
-      "Explore opportunities for personal or professional growth",
-      "Practice meditation to enhance your sense of inner freedom",
-    ],
-  },
-  {
-    symbol: "Water",
-    frequency: 12,
-    percentage: 35,
-    meaning: "Emotions and subconscious mind",
-    interpretation:
-      "Water in your dreams represents the flow of emotions and your connection to the subconscious. The state of water (calm, turbulent, clear, murky) reflects your emotional state.",
-    psychologicalMeaning:
-      "Indicates your relationship with emotions and how you process feelings. Clear water suggests emotional clarity, while turbulent water may indicate emotional turmoil.",
-    spiritualMeaning: "Water represents purification, renewal, and the flow of spiritual energy through your life.",
-    actionableInsights: [
-      "Pay attention to your emotional responses in daily life",
-      "Consider journaling to process complex feelings",
-      "Engage in water-based activities for emotional healing",
-    ],
-  },
-  {
-    symbol: "Animals",
-    frequency: 9,
-    percentage: 26,
-    meaning: "Instincts and natural wisdom",
-    interpretation:
-      "Animal appearances in dreams connect you to your primal instincts and natural wisdom. Different animals carry specific messages about aspects of your personality or life situations.",
-    psychologicalMeaning:
-      "Animals represent different aspects of your psyche - your wild, untamed nature, protective instincts, or need for companionship.",
-    spiritualMeaning:
-      "Animals are spirit guides offering wisdom and protection. They represent your connection to nature and ancient knowledge.",
-    actionableInsights: [
-      "Research the specific animals that appear in your dreams",
-      "Spend more time in nature to connect with natural rhythms",
-      "Trust your instincts in decision-making",
-    ],
-  },
-]
-
-const emotionalPatterns = [
-  {
-    emotion: "Peaceful",
-    frequency: 12,
-    percentage: 35,
-    trend: "increasing",
-    analysis:
-      "Your predominant peaceful state in dreams indicates inner harmony and emotional balance. This suggests you're in a good place mentally and spiritually.",
-    recommendations: [
-      "Continue practices that promote inner peace",
-      "Share your calm energy with others who may need it",
-      "Use this peaceful state to tackle challenging situations",
-    ],
-  },
-  {
-    emotion: "Curious",
-    frequency: 8,
-    percentage: 24,
-    trend: "stable",
-    analysis:
-      "High curiosity in dreams shows an active, exploring mind. You're open to new experiences and learning, which is excellent for personal growth.",
-    recommendations: [
-      "Pursue new learning opportunities",
-      "Ask more questions in your waking life",
-      "Explore subjects that fascinate you",
-    ],
-  },
-  {
-    emotion: "Anxious",
-    frequency: 6,
-    percentage: 18,
-    trend: "decreasing",
-    analysis:
-      "While anxiety appears in your dreams, it's decreasing over time. This suggests you're successfully working through concerns and developing better coping mechanisms.",
-    recommendations: [
-      "Continue stress-reduction practices",
-      "Address remaining sources of anxiety",
-      "Celebrate your progress in managing worry",
-    ],
-  },
-]
-
-const dreamThemes = [
-  {
-    theme: "Transformation & Growth",
-    description: "Your dreams frequently feature themes of personal evolution, change, and spiritual development.",
-    examples: ["Flying dreams", "Metamorphosis imagery", "Climbing mountains"],
-    significance: "You're in a period of significant personal growth and are ready to embrace positive changes.",
-  },
-  {
-    theme: "Emotional Processing",
-    description: "Many dreams involve water, relationships, and emotional scenarios that help you process feelings.",
-    examples: ["Ocean waves", "Rain", "Conversations with loved ones"],
-    significance: "Your subconscious is actively working through emotional experiences and relationships.",
-  },
-  {
-    theme: "Spiritual Connection",
-    description: "Dreams often include mystical elements, spiritual guides, and transcendent experiences.",
-    examples: ["Meeting wise figures", "Sacred spaces", "Divine light"],
-    significance: "You're developing a stronger connection to your spiritual self and higher consciousness.",
-  },
-]
+import { supabase } from "@/lib/supabaseClient"
 
 export default function AnalysisPage() {
   const router = useRouter()
   const [selectedTab, setSelectedTab] = useState("symbols")
+  const [dreams, setDreams] = useState<any[]>([])
+  const [symbolAnalysis, setSymbolAnalysis] = useState<any[]>([])
+  const [emotionalPatterns, setEmotionalPatterns] = useState<any[]>([])
+  const [dreamThemes, setDreamThemes] = useState<any[]>([])
+  const [stats, setStats] = useState({ total: 0, uniqueSymbols: 0, uniqueEmotions: 0 })
+
+  useEffect(() => {
+    const fetchAnalysis = async () => {
+      const user = (await supabase.auth.getUser()).data.user
+      if (!user) return
+      const { data: dreams } = await supabase
+        .from('dreams')
+        .select('*')
+        .eq('user_id', user.id)
+      setDreams(dreams || [])
+      // Symbol analysis
+      const symbolCounts: Record<string, number> = {}
+      dreams?.forEach(d => {
+        if (d.symbols) d.symbols.forEach((s: string) => symbolCounts[s] = (symbolCounts[s] || 0) + 1)
+      })
+      const symbolArr = Object.entries(symbolCounts).map(([symbol, frequency]) => ({
+        symbol,
+        frequency,
+        percentage: dreams && dreams.length > 0 ? Math.round((frequency / dreams.length) * 100) : 0,
+        meaning: '', // Optionally use OpenAI or a lookup for meaning
+        interpretation: '',
+        psychologicalMeaning: '',
+        spiritualMeaning: '',
+        actionableInsights: [],
+      }))
+      setSymbolAnalysis(symbolArr)
+      // Emotional patterns
+      const emotionCounts: Record<string, number> = {}
+      dreams?.forEach(d => {
+        if (d.mood) emotionCounts[d.mood] = (emotionCounts[d.mood] || 0) + 1
+      })
+      const emotionArr = Object.entries(emotionCounts).map(([emotion, frequency]) => ({
+        emotion,
+        frequency,
+        percentage: dreams && dreams.length > 0 ? Math.round((frequency / dreams.length) * 100) : 0,
+        trend: '',
+        analysis: '',
+        recommendations: [],
+      }))
+      setEmotionalPatterns(emotionArr)
+      // Dream themes (placeholder: could use OpenAI or custom logic)
+      setDreamThemes([])
+      // Stats
+      setStats({
+        total: dreams?.length || 0,
+        uniqueSymbols: symbolArr.length,
+        uniqueEmotions: emotionArr.length,
+      })
+    }
+    fetchAnalysis()
+  }, [])
 
   return (
     <div className="min-h-screen">

@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { GlassCard } from "@/components/ui/glass-card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sparkles, Eye, EyeOff, ArrowLeft, Star } from "lucide-react"
+import { supabase } from "@/lib/supabaseClient"
 
 const zodiacSigns = [
   { name: "Aries", symbol: "♈", dates: "Mar 21 - Apr 19" },
@@ -29,7 +30,8 @@ const zodiacSigns = [
 export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     month: "",
     day: "",
@@ -39,6 +41,7 @@ export default function SignUpPage() {
     confirmPassword: "",
   })
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -47,20 +50,51 @@ export default function SignUpPage() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError("")
 
-    // Basic validation
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords don't match!")
+      setError("Passwords don't match!")
       setIsLoading(false)
       return
     }
 
-    // Simulate API call
-    setTimeout(() => {
+    // Sign up with Supabase Auth
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email: formData.email,
+      password: formData.password,
+    })
+
+    if (signUpError) {
+      setError(signUpError.message)
       setIsLoading(false)
-      // Redirect to dashboard on successful signup
-      window.location.href = "/dashboard"
-    }, 2000)
+      return
+    }
+
+    // Insert profile data
+    const user = data.user
+    if (user) {
+      const birthday = `${formData.year}-${formData.month}-${formData.day}`
+      const { error: profileError } = await supabase.from("profiles").insert([
+        {
+          id: user.id,
+          email: formData.email,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          name: `${formData.firstName} ${formData.lastName}`.trim(), // Keep for compatibility
+          birthday,
+          zodiac: formData.zodiacSign,
+        },
+      ])
+      if (profileError) {
+        setError(profileError.message)
+        setIsLoading(false)
+        return
+      }
+    }
+
+    setIsLoading(false)
+    // Redirect to dashboard on successful signup
+    window.location.href = "/dashboard"
   }
 
   return (
@@ -94,16 +128,32 @@ export default function SignUpPage() {
           </div>
 
           <form onSubmit={handleSignUp} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                placeholder="Enter your name"
-                value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-                className="bg-white/5 border-white/10"
-                required
-              />
+            {error && (
+              <div className="text-red-500 text-sm text-center">{error}</div>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name</Label>
+                <Input
+                  id="firstName"
+                  placeholder="Enter first name"
+                  value={formData.firstName}
+                  onChange={(e) => handleInputChange("firstName", e.target.value)}
+                  className="bg-white/5 border-white/10"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  placeholder="Enter last name"
+                  value={formData.lastName}
+                  onChange={(e) => handleInputChange("lastName", e.target.value)}
+                  className="bg-white/5 border-white/10"
+                  required
+                />
+              </div>
             </div>
 
             <div className="space-y-2">

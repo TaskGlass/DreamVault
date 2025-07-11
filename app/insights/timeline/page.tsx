@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Navigation } from "@/components/navigation"
 import { GlassCard } from "@/components/ui/glass-card"
 import { Button } from "@/components/ui/button"
@@ -8,168 +8,71 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, Calendar, Moon, TrendingUp, Heart, Eye, Clock, BarChart3 } from "lucide-react"
 import { useRouter } from "next/navigation"
-
-const timelineData = [
-  {
-    date: "2024-01-15",
-    day: "Monday",
-    dreams: [
-      {
-        title: "Flying Over Mountains",
-        mood: "Peaceful",
-        symbols: ["Flying", "Mountains", "Sky"],
-        intensity: "High",
-        lucidity: false,
-        duration: "Long",
-        description: "Soaring above snow-capped peaks with a sense of complete freedom and joy.",
-      },
-    ],
-  },
-  {
-    date: "2024-01-14",
-    day: "Sunday",
-    dreams: [
-      {
-        title: "Ocean Waves",
-        mood: "Curious",
-        symbols: ["Water", "Ocean", "Waves"],
-        intensity: "Medium",
-        lucidity: false,
-        duration: "Medium",
-        description: "Standing on a beach watching powerful waves crash, feeling both awe and uncertainty.",
-      },
-      {
-        title: "Talking Animals",
-        mood: "Hopeful",
-        symbols: ["Animals", "Communication", "Forest"],
-        intensity: "Medium",
-        lucidity: true,
-        duration: "Short",
-        description: "Conversing with wise forest animals who shared guidance about life decisions.",
-      },
-    ],
-  },
-  {
-    date: "2024-01-13",
-    day: "Saturday",
-    dreams: [
-      {
-        title: "Maze of Light",
-        mood: "Anxious",
-        symbols: ["Maze", "Light", "Paths"],
-        intensity: "High",
-        lucidity: false,
-        duration: "Long",
-        description: "Navigating through a complex maze with beams of light showing the way forward.",
-      },
-    ],
-  },
-  {
-    date: "2024-01-12",
-    day: "Friday",
-    dreams: [
-      {
-        title: "Underwater City",
-        mood: "Peaceful",
-        symbols: ["Water", "City", "Fish"],
-        intensity: "Medium",
-        lucidity: false,
-        duration: "Medium",
-        description: "Exploring a beautiful underwater civilization with crystal clear water and colorful marine life.",
-      },
-    ],
-  },
-  {
-    date: "2024-01-11",
-    day: "Thursday",
-    dreams: [
-      {
-        title: "Flying with Birds",
-        mood: "Curious",
-        symbols: ["Flying", "Birds", "Sky"],
-        intensity: "High",
-        lucidity: true,
-        duration: "Long",
-        description: "Joining a flock of birds in flight, learning their patterns and communication.",
-      },
-    ],
-  },
-  {
-    date: "2024-01-10",
-    day: "Wednesday",
-    dreams: [
-      {
-        title: "Garden of Memories",
-        mood: "Hopeful",
-        symbols: ["Garden", "Flowers", "Past"],
-        intensity: "Low",
-        lucidity: false,
-        duration: "Short",
-        description: "Walking through a garden where each flower represented a cherished memory.",
-      },
-    ],
-  },
-  {
-    date: "2024-01-09",
-    day: "Tuesday",
-    dreams: [
-      {
-        title: "Storm at Sea",
-        mood: "Anxious",
-        symbols: ["Water", "Storm", "Ship"],
-        intensity: "High",
-        lucidity: false,
-        duration: "Medium",
-        description: "Navigating a ship through turbulent waters during a fierce storm.",
-      },
-    ],
-  },
-  {
-    date: "2024-01-08",
-    day: "Monday",
-    dreams: [
-      {
-        title: "Mountain Climbing",
-        mood: "Peaceful",
-        symbols: ["Mountains", "Climbing", "Achievement"],
-        intensity: "Medium",
-        lucidity: false,
-        duration: "Long",
-        description: "Steadily climbing a mountain with determination, reaching the summit at sunrise.",
-      },
-    ],
-  },
-]
-
-const weeklyStats = [
-  { week: "Week 1 (Jan 8-14)", totalDreams: 8, avgMood: "Peaceful", lucidDreams: 2, topSymbol: "Flying" },
-  { week: "Week 2 (Jan 1-7)", totalDreams: 6, avgMood: "Curious", lucidDreams: 1, topSymbol: "Water" },
-  { week: "Week 3 (Dec 25-31)", totalDreams: 5, avgMood: "Hopeful", lucidDreams: 0, topSymbol: "Animals" },
-  { week: "Week 4 (Dec 18-24)", totalDreams: 7, avgMood: "Peaceful", lucidDreams: 3, topSymbol: "Light" },
-]
-
-const moodColors = {
-  Peaceful: "bg-blue-500",
-  Curious: "bg-green-500",
-  Anxious: "bg-red-500",
-  Hopeful: "bg-purple-500",
-  Confused: "bg-orange-500",
-}
-
-const intensityColors = {
-  Low: "bg-gray-500",
-  Medium: "bg-yellow-500",
-  High: "bg-red-500",
-}
+import { supabase } from "@/lib/supabaseClient"
 
 export default function TimelinePage() {
   const router = useRouter()
   const [timeRange, setTimeRange] = useState("week")
   const [selectedMood, setSelectedMood] = useState("all")
+  const [timelineData, setTimelineData] = useState<any[]>([])
+  const [weeklyStats, setWeeklyStats] = useState<any[]>([])
 
-  const filteredData = timelineData.filter((day) => {
+  const moodColors = {
+    Peaceful: "bg-blue-500/20 text-blue-300",
+    Confused: "bg-orange-500/20 text-orange-300",
+    Curious: "bg-green-500/20 text-green-300",
+    Anxious: "bg-red-500/20 text-red-300",
+    Hopeful: "bg-purple-500/20 text-purple-300",
+  }
+
+  // Fallback for intensityColors if not defined
+  const intensityColors: Record<string, string> = {
+    Low: "bg-green-500/20 text-green-300",
+    Medium: "bg-yellow-500/20 text-yellow-300",
+    High: "bg-red-500/20 text-red-300",
+  }
+
+  useEffect(() => {
+    const fetchTimeline = async () => {
+      const user = (await supabase.auth.getUser()).data.user
+      if (!user) return
+      const { data: dreams } = await supabase
+        .from('dreams')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false })
+      // Group dreams by date
+      const grouped: Record<string, any> = {}
+      dreams?.forEach(dream => {
+        const date = dream.date
+        if (!grouped[date]) grouped[date] = { date, day: new Date(date).toLocaleDateString('en-US', { weekday: 'long' }), dreams: [] }
+        grouped[date].dreams.push(dream)
+      })
+      setTimelineData(Object.values(grouped))
+      // Weekly stats
+      const weekMap: Record<string, { totalDreams: number; moods: Record<string, number>; lucidDreams: number; symbols: Record<string, number> }> = {}
+      dreams?.forEach(dream => {
+        const date = new Date(dream.date)
+        const weekNum = `${date.getFullYear()}-W${Math.ceil((date.getDate() + 6 - date.getDay()) / 7)}`
+        if (!weekMap[weekNum]) weekMap[weekNum] = { totalDreams: 0, moods: {}, lucidDreams: 0, symbols: {} }
+        weekMap[weekNum].totalDreams++
+        if (dream.mood) weekMap[weekNum].moods[dream.mood] = (weekMap[weekNum].moods[dream.mood] || 0) + 1
+        if (dream.lucidity) weekMap[weekNum].lucidDreams++
+        if (dream.symbols) dream.symbols.forEach((s: string) => weekMap[weekNum].symbols[s] = (weekMap[weekNum].symbols[s] || 0) + 1)
+      })
+      const weeklyArr = Object.entries(weekMap).map(([week, stats]) => {
+        const avgMood = Object.entries(stats.moods).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
+        const topSymbol = Object.entries(stats.symbols).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
+        return { week, totalDreams: stats.totalDreams, avgMood, lucidDreams: stats.lucidDreams, topSymbol }
+      })
+      setWeeklyStats(weeklyArr)
+    }
+    fetchTimeline()
+  }, [])
+
+  const filteredData = timelineData.filter((day: any) => {
     if (selectedMood === "all") return true
-    return day.dreams.some((dream) => dream.mood === selectedMood)
+    return day.dreams.some((dream: any) => dream.mood === selectedMood)
   })
 
   return (
@@ -241,7 +144,7 @@ export default function TimelinePage() {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-400">Avg Mood:</span>
-                      <Badge className={`${moodColors[week.avgMood]}/20 text-xs`}>{week.avgMood}</Badge>
+                      <Badge className={`${moodColors[String(week.avgMood) as keyof typeof moodColors]}/20 text-xs`}>{week.avgMood}</Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-400">Lucid:</span>
@@ -283,7 +186,7 @@ export default function TimelinePage() {
                 </div>
 
                 <div className="space-y-4">
-                  {day.dreams.map((dream, dreamIndex) => (
+                  {day.dreams.map((dream: any, dreamIndex: number) => (
                     <div key={dreamIndex} className="p-4 bg-white/5 rounded-xl border-l-4 border-purple-500/50">
                       <div className="flex flex-col lg:flex-row lg:items-start justify-between mb-3 gap-3">
                         <div className="flex-1 min-w-0">
@@ -298,11 +201,11 @@ export default function TimelinePage() {
                       </div>
 
                       <div className="flex flex-wrap gap-2 mb-3">
-                        <Badge className={`${moodColors[dream.mood]}/20 text-xs`}>
+                        <Badge className={`${moodColors[String(dream.mood) as keyof typeof moodColors]}/20 text-xs`}>
                           <Heart className="h-3 w-3 mr-1" />
                           {dream.mood}
                         </Badge>
-                        <Badge className={`${intensityColors[dream.intensity]}/20 text-xs`}>
+                        <Badge className={`${intensityColors[String(dream.intensity) as keyof typeof intensityColors]}/20 text-xs`}>
                           <TrendingUp className="h-3 w-3 mr-1" />
                           {dream.intensity}
                         </Badge>
@@ -313,7 +216,7 @@ export default function TimelinePage() {
                       </div>
 
                       <div className="flex flex-wrap gap-1">
-                        {dream.symbols.map((symbol, symbolIndex) => (
+                        {dream.symbols && dream.symbols.map((symbol: any, symbolIndex: number) => (
                           <Badge key={symbolIndex} variant="outline" className="text-xs">
                             <Eye className="h-3 w-3 mr-1" />
                             {symbol}

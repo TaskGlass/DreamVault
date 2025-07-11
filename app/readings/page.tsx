@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Sparkles, Moon, Star, Shuffle, Eye, Heart, X } from "lucide-react"
 import { createPortal } from "react-dom"
+import { supabase } from "@/lib/supabaseClient"
 
 const tarotCards = [
   { name: "The Fool", meaning: "New beginnings, innocence, spontaneity", image: "🃏" },
@@ -16,6 +17,67 @@ const tarotCards = [
   { name: "The Emperor", meaning: "Authority, establishment, structure", image: "⚡" },
   { name: "The Lovers", meaning: "Love, harmony, relationships, values alignment", image: "💕" },
 ]
+
+// Helper functions for zodiac data
+const getZodiacInfo = (zodiacSign: string) => {
+  const zodiacData: Record<string, any> = {
+    "Aries": { symbol: "♈", element: "Fire", rulingPlanet: "Mars" },
+    "Taurus": { symbol: "♉", element: "Earth", rulingPlanet: "Venus" },
+    "Gemini": { symbol: "♊", element: "Air", rulingPlanet: "Mercury" },
+    "Cancer": { symbol: "♋", element: "Water", rulingPlanet: "Moon" },
+    "Leo": { symbol: "♌", element: "Fire", rulingPlanet: "Sun" },
+    "Virgo": { symbol: "♍", element: "Earth", rulingPlanet: "Mercury" },
+    "Libra": { symbol: "♎", element: "Air", rulingPlanet: "Venus" },
+    "Scorpio": { symbol: "♏", element: "Water", rulingPlanet: "Mars" },
+    "Sagittarius": { symbol: "♐", element: "Fire", rulingPlanet: "Jupiter" },
+    "Capricorn": { symbol: "♑", element: "Earth", rulingPlanet: "Saturn" },
+    "Aquarius": { symbol: "♒", element: "Air", rulingPlanet: "Uranus" },
+    "Pisces": { symbol: "♓", element: "Water", rulingPlanet: "Neptune" }
+  }
+  return zodiacData[zodiacSign] || { symbol: "⭐", element: "Universal", rulingPlanet: "Cosmos" }
+}
+
+const generateLuckyNumbers = (zodiacSign: string) => {
+  const zodiacIndex = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"].indexOf(zodiacSign)
+  const base = zodiacIndex + 1
+  return [base, base + 7, base + 14, base + 21].filter(n => n <= 31)
+}
+
+const getBestTime = (zodiacSign: string) => {
+  const times: Record<string, string> = {
+    "Aries": "6:00 AM - 8:00 AM",
+    "Taurus": "8:00 AM - 10:00 AM", 
+    "Gemini": "10:00 AM - 12:00 PM",
+    "Cancer": "12:00 PM - 2:00 PM",
+    "Leo": "11:00 AM - 1:00 PM",
+    "Virgo": "2:00 PM - 4:00 PM",
+    "Libra": "4:00 PM - 6:00 PM",
+    "Scorpio": "6:00 PM - 8:00 PM",
+    "Sagittarius": "8:00 PM - 10:00 PM",
+    "Capricorn": "10:00 PM - 12:00 AM",
+    "Aquarius": "12:00 AM - 2:00 AM",
+    "Pisces": "2:00 AM - 4:00 AM"
+  }
+  return times[zodiacSign] || "Anytime"
+}
+
+const getDreamSymbols = (zodiacSign: string) => {
+  const symbols: Record<string, string[]> = {
+    "Aries": ["Fire", "Mountains", "Warriors", "Red objects", "Rams"],
+    "Taurus": ["Nature", "Gardens", "Bulls", "Green landscapes", "Flowers"],
+    "Gemini": ["Birds", "Messages", "Twins", "Books", "Communication"],
+    "Cancer": ["Water", "Moon", "Shells", "Home", "Family"],
+    "Leo": ["Sun", "Lions", "Gold", "Stages", "Crowns"],
+    "Virgo": ["Healing", "Organization", "Earth", "Service", "Perfection"],
+    "Libra": ["Balance", "Partnerships", "Art", "Justice", "Harmony"],
+    "Scorpio": ["Transformation", "Depth", "Mysteries", "Phoenix", "Intensity"],
+    "Sagittarius": ["Adventure", "Arrows", "Travel", "Wisdom", "Freedom"],
+    "Capricorn": ["Mountains", "Achievement", "Structure", "Discipline", "Success"],
+    "Aquarius": ["Innovation", "Groups", "Future", "Electricity", "Humanitarian"],
+    "Pisces": ["Ocean", "Fish", "Spirituality", "Dreams", "Compassion"]
+  }
+  return symbols[zodiacSign] || ["Universal symbols", "Cosmic energy", "Spiritual growth"]
+}
 
 const zodiacSigns = [
   {
@@ -207,6 +269,14 @@ export default function ReadingsPage() {
   const [isDrawing, setIsDrawing] = useState(false)
   const [currentHoroscope, setCurrentHoroscope] = useState<any>(null)
   const [selectedZodiac, setSelectedZodiac] = useState<any>(null)
+  const [userZodiac, setUserZodiac] = useState<string>("")
+  const [todaysHoroscope, setTodaysHoroscope] = useState<string>("")
+  const [loadingHoroscope, setLoadingHoroscope] = useState(false)
+  const [horoscopeData, setHoroscopeData] = useState<any>(null)
+  const [todaysAffirmation, setTodaysAffirmation] = useState<string>("")
+  const [loadingAffirmation, setLoadingAffirmation] = useState(false)
+  const [todaysMoonPhase, setTodaysMoonPhase] = useState<string>("")
+  const [loadingMoonPhase, setLoadingMoonPhase] = useState(false)
 
   const tarotRef = useRef<HTMLDivElement>(null)
   const horoscopeRef = useRef<HTMLDivElement>(null)
@@ -215,9 +285,6 @@ export default function ReadingsPage() {
 
   // Add this useEffect after the existing state declarations
   useEffect(() => {
-    // Show horoscope by default when page loads
-    getHoroscope()
-
     // Check if user came from dashboard wanting to see horoscope
     const showHoroscope = sessionStorage.getItem("showHoroscope")
     if (showHoroscope) {
@@ -228,6 +295,64 @@ export default function ReadingsPage() {
     }
   }, [])
 
+  // Load horoscope when userZodiac is available
+  useEffect(() => {
+    if (userZodiac) {
+      getHoroscope()
+    }
+  }, [userZodiac])
+
+  useEffect(() => {
+    const fetchUserZodiac = async () => {
+      const user = (await supabase.auth.getUser()).data.user
+      if (!user) return
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('zodiac')
+        .eq('id', user.id)
+        .single()
+      setUserZodiac(profile?.zodiac || "")
+    }
+    fetchUserZodiac()
+  }, [])
+
+  const fetchHoroscope = async () => {
+    if (!userZodiac) return
+    setLoadingHoroscope(true)
+    const today = new Date().toISOString().slice(0, 10)
+    // Check if horoscope already exists in Supabase
+    const { data: existing } = await supabase
+      .from('horoscopes')
+      .select('content')
+      .eq('user_id', (await supabase.auth.getUser()).data.user.id)
+      .eq('zodiac', userZodiac)
+      .eq('date', today)
+      .single()
+    if (existing?.content) {
+      setTodaysHoroscope(existing.content)
+      setLoadingHoroscope(false)
+      return
+    }
+    // Generate with OpenAI
+    const response = await fetch('/api/generate-horoscope', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ zodiac: userZodiac })
+    })
+    const { horoscope } = await response.json()
+    setTodaysHoroscope(horoscope)
+    // Store in Supabase
+    await supabase.from('horoscopes').insert([
+      {
+        user_id: (await supabase.auth.getUser()).data.user.id,
+        zodiac: userZodiac,
+        date: today,
+        content: horoscope,
+      },
+    ])
+    setLoadingHoroscope(false)
+  }
+
   const drawTarotCards = () => {
     setIsDrawing(true)
     setTimeout(() => {
@@ -237,36 +362,114 @@ export default function ReadingsPage() {
     }, 2000)
   }
 
-  const getHoroscope = () => {
-    setCurrentHoroscope({
-      sign: "Leo",
-      date: "Today",
-      symbol: "♌",
-      element: "Fire",
-      rulingPlanet: "Sun",
-      reading:
-        "The Sun's radiant energy illuminates your path today, dear Leo. Your natural magnetism and creative fire are at their peak, drawing opportunities and admirers into your orbit. The cosmic energies are aligning to support your artistic endeavors and leadership qualities. This is a powerful day for self-expression and stepping into your authentic power.",
-      love: "Venus whispers sweet possibilities in your romantic sector. Single Leos may find themselves captivated by someone who appreciates their unique brilliance. Coupled Leos should focus on grand gestures and heartfelt communication. Your partner craves your attention and admiration - don't hold back on the compliments.",
-      career:
-        "Your professional life sparkles with potential today. The Sun's influence brings recognition for your hard work and creative contributions. A leadership opportunity may present itself, or you might find yourself naturally taking charge of a project. Trust your instincts when making important decisions.",
-      health:
-        "Your vitality runs high, but remember that even the Sun needs to set. Balance your fiery energy with moments of rest and reflection. Pay attention to your heart - both literally and metaphorically. Cardiovascular exercise will serve you well today.",
-      lucky: "Golden Yellow",
-      luckyNumbers: [3, 7, 19, 28],
-      bestTime: "11:00 AM - 1:00 PM",
-      moonPhase: "Waxing Gibbous in Sagittarius",
-      planetaryInfluence:
-        "The Sun in your sign amplifies your natural charisma, while Mercury enhances your communication skills. Jupiter's supportive aspect brings expansion and good fortune.",
-      dreamSymbols: [
-        "Golden lions",
-        "Bright sunlight",
-        "Crowns or royal imagery",
-        "Stage performances",
-        "Fire or flames",
-      ],
-      advice:
-        "Embrace your inner royalty today, Leo. The universe is your stage, and you are the star. Don't dim your light for anyone - your authentic self is your greatest gift to the world. Pay special attention to dreams featuring gold, lions, or performance themes, as they carry messages about your true calling and creative potential.",
+  const getHoroscope = async () => {
+    if (!userZodiac) return
+    
+    setLoadingHoroscope(true)
+    try {
+      const user = (await supabase.auth.getUser()).data.user
+      if (!user) return
+      
+      const response = await fetch('/api/daily-horoscope', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          zodiacSign: userZodiac,
+          userId: user.id 
+        })
+      })
+      
+      const result = await response.json()
+      if (result.horoscope) {
+        setHoroscopeData(result)
+        setTodaysHoroscope(result.horoscope)
+        
+        // Set the current horoscope with user's actual data
+        const zodiacInfo = getZodiacInfo(userZodiac)
+        setCurrentHoroscope({
+          sign: userZodiac,
+          date: new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
+          symbol: zodiacInfo.symbol,
+          element: zodiacInfo.element,
+          rulingPlanet: zodiacInfo.rulingPlanet,
+          reading: result.horoscope,
+          love: "Your romantic energy is enhanced by today's cosmic alignment. Trust your intuition in matters of the heart.",
+          career: "Professional opportunities may present themselves today. Your natural abilities shine in collaborative settings.", 
+          health: "Focus on balance and listen to your body's wisdom. Gentle movement and mindful breathing support your wellbeing.",
+          lucky: result.luckyElement,
+          luckyNumbers: generateLuckyNumbers(userZodiac),
+          bestTime: getBestTime(userZodiac),
+          moonPhase: "Current lunar phase supports your spiritual growth",
+          planetaryInfluence: `${zodiacInfo.rulingPlanet} influences bring enhanced clarity and focus to your path.`,
+          dreamSymbols: getDreamSymbols(userZodiac),
+          advice: `Trust your ${zodiacInfo.element.toLowerCase()} nature today. Pay attention to dreams featuring ${result.dreamFocus.toLowerCase()} elements - they carry important messages for your spiritual journey.`,
+        })
+      }
+    } catch (error) {
+      console.error('Error fetching horoscope:', error)
+    } finally {
+      setLoadingHoroscope(false)
+    }
+  }
+
+  const fetchAffirmation = async () => {
+    setLoadingAffirmation(true)
+    const today = new Date().toISOString().slice(0, 10)
+    const { data: existing } = await supabase
+      .from('affirmations')
+      .select('content')
+      .eq('user_id', (await supabase.auth.getUser()).data.user.id)
+      .eq('date', today)
+      .single()
+    if (existing?.content) {
+      setTodaysAffirmation(existing.content)
+      setLoadingAffirmation(false)
+      return
+    }
+    const response = await fetch('/api/generate-affirmation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ zodiac: userZodiac })
     })
+    const { affirmation } = await response.json()
+    setTodaysAffirmation(affirmation)
+    await supabase.from('affirmations').insert([
+      {
+        user_id: (await supabase.auth.getUser()).data.user.id,
+        date: today,
+        content: affirmation,
+      },
+    ])
+    setLoadingAffirmation(false)
+  }
+
+  const fetchMoonPhase = async () => {
+    setLoadingMoonPhase(true)
+    const today = new Date().toISOString().slice(0, 10)
+    const { data: existing } = await supabase
+      .from('moon_phases')
+      .select('content')
+      .eq('date', today)
+      .single()
+    if (existing?.content) {
+      setTodaysMoonPhase(existing.content)
+      setLoadingMoonPhase(false)
+      return
+    }
+    const response = await fetch('/api/generate-moon-phase', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: today })
+    })
+    const { moonPhase } = await response.json()
+    setTodaysMoonPhase(moonPhase)
+    await supabase.from('moon_phases').insert([
+      {
+        date: today,
+        content: moonPhase,
+      },
+    ])
+    setLoadingMoonPhase(false)
   }
 
   const scrollToTarot = () => {
@@ -276,7 +479,10 @@ export default function ReadingsPage() {
     }, 100)
   }
 
-  const scrollToHoroscope = () => {
+  const scrollToHoroscope = async () => {
+    if (userZodiac && !currentHoroscope) {
+      await getHoroscope()
+    }
     horoscopeRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
@@ -422,7 +628,33 @@ export default function ReadingsPage() {
                   <Star className="h-4 w-4 mr-2" />
                   Daily Overview
                 </h4>
-                <p className="text-gray-300 leading-relaxed">{currentHoroscope?.reading}</p>
+                {loadingHoroscope ? (
+                  <p className="text-gray-300 leading-relaxed">Loading your personalized horoscope...</p>
+                ) : todaysHoroscope ? (
+                  (() => {
+                    const parts = todaysHoroscope.split('\n\nCosmic tip:')
+                    const mainReading = parts[0]
+                    const cosmicTip = parts[1]
+                    
+                    return (
+                      <div className="space-y-4">
+                        <p className="text-gray-300 leading-relaxed">
+                          {mainReading}
+                        </p>
+                        {cosmicTip && (
+                          <div className="border-t border-white/10 pt-3">
+                            <p className="text-sm font-medium text-yellow-300 mb-2">✨ Cosmic tip:</p>
+                            <p className="text-sm text-gray-300 italic leading-relaxed">
+                              {cosmicTip.trim()}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()
+                ) : (
+                  <p className="text-gray-300 leading-relaxed">Your daily horoscope will appear here.</p>
+                )}
               </div>
 
               {/* Life Areas Grid */}
@@ -432,7 +664,7 @@ export default function ReadingsPage() {
                     <Heart className="h-4 w-4 mr-2" />
                     Love & Relationships
                   </h5>
-                  <p className="text-xs text-gray-300 leading-relaxed">{currentHoroscope?.love}</p>
+                  <p className="text-xs md:text-sm text-gray-300 leading-relaxed">{currentHoroscope?.love}</p>
                 </div>
 
                 <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-lg p-4">
@@ -440,7 +672,7 @@ export default function ReadingsPage() {
                     <Star className="h-4 w-4 mr-2" />
                     Career & Finance
                   </h5>
-                  <p className="text-xs text-gray-300 leading-relaxed">{currentHoroscope?.career}</p>
+                  <p className="text-xs md:text-sm text-gray-300 leading-relaxed">{currentHoroscope?.career}</p>
                 </div>
 
                 <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-lg p-4">
@@ -448,7 +680,7 @@ export default function ReadingsPage() {
                     <Heart className="h-4 w-4 mr-2" />
                     Health & Wellness
                   </h5>
-                  <p className="text-xs text-gray-300 leading-relaxed">{currentHoroscope?.health}</p>
+                  <p className="text-xs md:text-sm text-gray-300 leading-relaxed">{currentHoroscope?.health}</p>
                 </div>
               </div>
 
@@ -456,7 +688,7 @@ export default function ReadingsPage() {
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="bg-gradient-to-r from-purple-500/10 to-indigo-500/10 rounded-lg p-4">
                   <h5 className="font-medium text-purple-300 mb-3">Lucky Elements</h5>
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-2 text-sm md:text-base">
                     <div className="flex justify-between">
                       <span className="text-gray-400">Color:</span>
                       <span className="text-yellow-300">{currentHoroscope?.lucky}</span>
@@ -474,14 +706,14 @@ export default function ReadingsPage() {
 
                 <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-lg p-4">
                   <h5 className="font-medium text-indigo-300 mb-3">Cosmic Influences</h5>
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-2 text-sm md:text-base">
                     <div>
                       <span className="text-gray-400">Moon Phase:</span>
-                      <p className="text-indigo-300 text-xs">{currentHoroscope?.moonPhase}</p>
+                      <p className="text-indigo-300 text-xs md:text-sm">{currentHoroscope?.moonPhase}</p>
                     </div>
                     <div>
                       <span className="text-gray-400">Planetary Energy:</span>
-                      <p className="text-indigo-300 text-xs">{currentHoroscope?.planetaryInfluence}</p>
+                      <p className="text-indigo-300 text-xs md:text-sm">{currentHoroscope?.planetaryInfluence}</p>
                     </div>
                   </div>
                 </div>
@@ -495,12 +727,12 @@ export default function ReadingsPage() {
                 </h5>
                 <div className="flex flex-wrap gap-2 mb-3">
                   {currentHoroscope?.dreamSymbols?.map((symbol, index) => (
-                    <Badge key={index} className="bg-purple-500/20 text-purple-200 text-xs">
+                    <Badge key={index} className="bg-purple-500/20 text-purple-200 text-xs md:text-sm">
                       {symbol}
                     </Badge>
                   ))}
                 </div>
-                <p className="text-xs text-gray-300 leading-relaxed">
+                <p className="text-xs md:text-sm text-gray-300 leading-relaxed">
                   These symbols in your dreams carry special significance for your sign today. Pay attention to their
                   context and emotions they evoke.
                 </p>
@@ -512,7 +744,7 @@ export default function ReadingsPage() {
                   <Sparkles className="h-4 w-4 mr-2" />
                   Cosmic Guidance
                 </h4>
-                <p className="text-sm text-gray-300 leading-relaxed">{currentHoroscope?.advice}</p>
+                <p className="text-sm md:text-base text-gray-300 leading-relaxed">{currentHoroscope?.advice}</p>
               </div>
             </div>
           </GlassCard>

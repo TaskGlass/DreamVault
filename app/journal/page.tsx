@@ -1,42 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Navigation } from "@/components/navigation"
 import { GlassCard } from "@/components/ui/glass-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { BookOpen, Search, Filter, Plus, Calendar, Heart, Brain, Zap } from "lucide-react"
-
-const dreamEntries = [
-  {
-    id: 1,
-    title: "Flying Over the Ocean",
-    date: "2024-01-15",
-    mood: "Peaceful",
-    symbols: ["Water", "Flying", "Freedom"],
-    interpretation: "This dream suggests a desire for emotional freedom and clarity in your life.",
-    content: "I was soaring high above crystal blue waters, feeling completely free and at peace...",
-  },
-  {
-    id: 2,
-    title: "Lost in a Maze",
-    date: "2024-01-12",
-    mood: "Confused",
-    symbols: ["Maze", "Lost", "Searching"],
-    interpretation: "The maze represents current life challenges and your search for direction.",
-    content: "I found myself in an endless maze with walls that seemed to shift and change...",
-  },
-  {
-    id: 3,
-    title: "Talking to Animals",
-    date: "2024-01-10",
-    mood: "Curious",
-    symbols: ["Animals", "Communication", "Nature"],
-    interpretation: "This dream indicates a strong connection to your intuitive and natural self.",
-    content: "A wise owl spoke to me in the forest, sharing ancient secrets...",
-  },
-]
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { BookOpen, Search, Filter, Plus, Calendar, Heart, Brain, Zap, Trash2, MoreVertical } from "lucide-react"
+import { supabase } from "@/lib/supabaseClient"
+import { useToast } from "@/hooks/use-toast"
 
 const moodColors = {
   Peaceful: "bg-blue-500/20 text-blue-300",
@@ -49,12 +23,121 @@ const moodColors = {
 export default function JournalPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedEntry, setSelectedEntry] = useState<any>(null)
+  const [dreamEntries, setDreamEntries] = useState<any[]>([])
+  const [dreamStats, setDreamStats] = useState({ total: 0, month: 0, topMood: '', topSymbol: '' })
+  const [deletingDreams, setDeletingDreams] = useState<Set<string>>(new Set())
+  const { toast } = useToast()
 
-  const filteredEntries = dreamEntries.filter(
-    (entry) =>
-      entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      entry.content.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  useEffect(() => {
+    const fetchDreams = async () => {
+      const user = (await supabase.auth.getUser()).data.user
+      if (!user) return
+      // Fetch all dreams
+      const { data: dreams } = await supabase
+        .from('dreams')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false })
+      console.log('Raw dreams from database:', dreams?.map(d => ({ title: d.title, date: d.date })))
+      setDreamEntries(dreams || [])
+      // Fetch stats
+      if (dreams) {
+        const total = dreams.length
+        const month = dreams.filter(d => new Date(d.date).getMonth() === new Date().getMonth()).length
+        const moodCounts: Record<string, number> = {}
+        const symbolCounts: Record<string, number> = {}
+        dreams.forEach(d => {
+          if (d.mood) moodCounts[d.mood] = (moodCounts[d.mood] || 0) + 1
+          if (d.symbols) d.symbols.forEach((s: string) => symbolCounts[s] = (symbolCounts[s] || 0) + 1)
+        })
+        const topMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
+        const rawTopSymbol = Object.entries(symbolCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
+        // Truncate top symbol to 1-2 words max
+        const topSymbol = rawTopSymbol.split(' ').slice(0, 2).join(' ')
+        setDreamStats({ total, month, topMood, topSymbol })
+      }
+    }
+    fetchDreams()
+  }, [])
+
+  const deleteDream = async (dreamId: string, dreamTitle: string) => {
+    setDeletingDreams(prev => new Set(prev).add(dreamId))
+    try {
+      const { error } = await supabase
+        .from('dreams')
+        .delete()
+        .eq('id', dreamId)
+
+      if (error) {
+        throw error
+      }
+
+      // Update local state to remove the deleted dream
+      setDreamEntries(prev => prev.filter(dream => dream.id !== dreamId))
+      
+      // Clear selection if the deleted dream was selected
+      if (selectedEntry?.id === dreamId) {
+        setSelectedEntry(null)
+      }
+      
+      // Refresh dream stats
+      const user = (await supabase.auth.getUser()).data.user
+      if (user) {
+        const { data: allDreams } = await supabase
+          .from('dreams')
+          .select('mood,symbols,date')
+          .eq('user_id', user.id)
+        
+        if (allDreams) {
+          const total = allDreams.length
+          const month = allDreams.filter(d => new Date(d.date).getMonth() === new Date().getMonth()).length
+          const moodCounts: Record<string, number> = {}
+          const symbolCounts: Record<string, number> = {}
+          allDreams.forEach(d => {
+            if (d.mood) moodCounts[d.mood] = (moodCounts[d.mood] || 0) + 1
+            if (d.symbols) d.symbols.forEach((s: string) => symbolCounts[s] = (symbolCounts[s] || 0) + 1)
+          })
+          const topMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
+          const rawTopSymbol = Object.entries(symbolCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
+          const topSymbol = rawTopSymbol.split(' ').slice(0, 2).join(' ')
+          setDreamStats({ total, month, topMood, topSymbol })
+        }
+      }
+
+      toast({
+        title: "Dream deleted",
+        description: `"${dreamTitle}" has been removed from your journal.`,
+      })
+    } catch (error) {
+      console.error('Error deleting dream:', error)
+      toast({
+        title: "Failed to delete dream",
+        description: "Please try again in a moment.",
+        variant: "destructive",
+      })
+    } finally {
+      setDeletingDreams(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(dreamId)
+        return newSet
+      })
+    }
+  }
+
+  const filteredEntries = [...dreamEntries]
+    .filter(
+      (entry) =>
+        entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        entry.content.toLowerCase().includes(searchTerm.toLowerCase()),
+    )
+    .sort((a, b) => {
+      const dateA = new Date(a.date).getTime()
+      const dateB = new Date(b.date).getTime()
+      console.log(`Sorting: ${a.title?.slice(0, 20)} (${a.date}) vs ${b.title?.slice(0, 20)} (${b.date}) = ${dateB - dateA}`)
+      return dateB - dateA
+          })
+
+  console.log('Final filtered entries order:', filteredEntries.map(e => ({ title: e.title?.slice(0, 20), date: e.date })))
 
   return (
     <div className="min-h-screen">
@@ -99,22 +182,22 @@ export default function JournalPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <GlassCard className="text-center">
               <BookOpen className="h-6 w-6 text-purple-400 mx-auto mb-2" />
-              <p className="text-2xl font-bold">23</p>
+              <p className="text-2xl font-bold">{dreamStats.total}</p>
               <p className="text-sm text-gray-400">Total Dreams</p>
             </GlassCard>
             <GlassCard className="text-center">
               <Calendar className="h-6 w-6 text-blue-400 mx-auto mb-2" />
-              <p className="text-2xl font-bold">7</p>
+              <p className="text-2xl font-bold">{dreamStats.month}</p>
               <p className="text-sm text-gray-400">This Month</p>
             </GlassCard>
             <GlassCard className="text-center">
               <Heart className="h-6 w-6 text-pink-400 mx-auto mb-2" />
-              <p className="text-2xl font-bold">Peaceful</p>
+              <p className="text-2xl font-bold">{dreamStats.topMood}</p>
               <p className="text-sm text-gray-400">Top Mood</p>
             </GlassCard>
             <GlassCard className="text-center">
               <Zap className="h-6 w-6 text-yellow-400 mx-auto mb-2" />
-              <p className="text-2xl font-bold">Flying</p>
+              <p className="text-2xl font-bold">{dreamStats.topSymbol}</p>
               <p className="text-sm text-gray-400">Top Symbol</p>
             </GlassCard>
           </div>
@@ -126,44 +209,104 @@ export default function JournalPage() {
               {filteredEntries.map((entry) => (
                 <GlassCard
                   key={entry.id}
-                  className={`cursor-pointer transition-all hover:glow ${
+                  className={`transition-all hover:glow ${
                     selectedEntry?.id === entry.id ? "ring-2 ring-purple-500/50" : ""
                   }`}
-                  onClick={() => {
-                    setSelectedEntry(entry)
-                    // Auto-scroll to dream details section
-                    setTimeout(() => {
-                      const dreamDetailsSection = document.querySelector("[data-dream-details]")
-                      if (dreamDetailsSection) {
-                        dreamDetailsSection.scrollIntoView({ behavior: "smooth", block: "start" })
-                      }
-                    }, 100)
-                  }}
                 >
                   <div className="flex justify-between items-start mb-3">
-                    <h3 className="font-semibold">{entry.title}</h3>
-                    <Badge className={moodColors[entry.mood as keyof typeof moodColors] || "bg-gray-500/20"}>
-                      {entry.mood}
-                    </Badge>
+                    <h3 
+                      className="font-semibold cursor-pointer flex-1"
+                      onClick={() => {
+                        setSelectedEntry(entry)
+                        // Auto-scroll to dream details section
+                        setTimeout(() => {
+                          const dreamDetailsSection = document.querySelector("[data-dream-details]")
+                          if (dreamDetailsSection) {
+                            dreamDetailsSection.scrollIntoView({ behavior: "smooth", block: "start" })
+                          }
+                        }, 100)
+                      }}
+                    >
+                      {entry.title}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <Badge className={moodColors[entry.mood as keyof typeof moodColors] || "bg-gray-500/20"}>
+                        {entry.mood}
+                      </Badge>
+                      <AlertDialog>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 hover:bg-white/10"
+                              disabled={deletingDreams.has(entry.id)}
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem className="text-red-400 cursor-pointer">
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete Dream
+                              </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Dream</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{entry.title}"? This action cannot be undone and will permanently remove this dream from your journal.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => deleteDream(entry.id, entry.title)}
+                              className="bg-red-600 hover:bg-red-700"
+                              disabled={deletingDreams.has(entry.id)}
+                            >
+                              {deletingDreams.has(entry.id) ? "Deleting..." : "Delete"}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </div>
 
-                  <p className="text-sm text-gray-400 mb-3">
-                    {new Date(entry.date).toLocaleDateString("en-US", {
-                      weekday: "long",
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </p>
+                  <div 
+                    className="cursor-pointer"
+                    onClick={() => {
+                      setSelectedEntry(entry)
+                      // Auto-scroll to dream details section
+                      setTimeout(() => {
+                        const dreamDetailsSection = document.querySelector("[data-dream-details]")
+                        if (dreamDetailsSection) {
+                          dreamDetailsSection.scrollIntoView({ behavior: "smooth", block: "start" })
+                        }
+                      }, 100)
+                    }}
+                  >
+                    <p className="text-sm text-gray-400 mb-3">
+                      {new Date(entry.date).toLocaleDateString("en-US", {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </p>
 
-                  <p className="text-sm text-gray-300 mb-3 line-clamp-2">{entry.content}</p>
+                    <p className="text-sm text-gray-300 mb-3 line-clamp-2">{entry.content}</p>
 
-                  <div className="flex flex-wrap gap-1">
-                    {entry.symbols.slice(0, 3).map((symbol, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {symbol}
-                      </Badge>
-                    ))}
+                    <div className="flex flex-wrap gap-1">
+                      {entry.symbols.slice(0, 3).map((symbol: string, index: number) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {symbol}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
                 </GlassCard>
               ))}
@@ -177,9 +320,51 @@ export default function JournalPage() {
                   <div className="space-y-4">
                     <div className="flex justify-between items-start">
                       <h3 className="text-xl font-semibold text-purple-300">{selectedEntry.title}</h3>
-                      <Badge className={moodColors[selectedEntry.mood as keyof typeof moodColors]}>
-                        {selectedEntry.mood}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge className={moodColors[selectedEntry.mood as keyof typeof moodColors]}>
+                          {selectedEntry.mood}
+                        </Badge>
+                        <AlertDialog>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 hover:bg-white/10"
+                                disabled={deletingDreams.has(selectedEntry.id)}
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem className="text-red-400 cursor-pointer">
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete Dream
+                                </DropdownMenuItem>
+                              </AlertDialogTrigger>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Dream</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete "{selectedEntry.title}"? This action cannot be undone and will permanently remove this dream from your journal.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => deleteDream(selectedEntry.id, selectedEntry.title)}
+                                className="bg-red-600 hover:bg-red-700"
+                                disabled={deletingDreams.has(selectedEntry.id)}
+                              >
+                                {deletingDreams.has(selectedEntry.id) ? "Deleting..." : "Delete"}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </div>
 
                     <p className="text-sm text-gray-400">
@@ -209,7 +394,7 @@ export default function JournalPage() {
 
                     <div>
                       <h4 className="font-medium mb-2">Dream Interpretation</h4>
-                      <p className="text-gray-300 text-sm leading-relaxed">{selectedEntry.interpretation}</p>
+                      <p className="text-gray-300 text-sm leading-relaxed">{selectedEntry.ai_interpretation || selectedEntry.interpretation}</p>
                     </div>
 
                     <div className="pt-4">
@@ -218,27 +403,19 @@ export default function JournalPage() {
                         Actionable Steps
                       </h4>
                       <div className="space-y-3">
-                        <div className="p-3 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg">
-                          <h5 className="font-medium text-purple-300 mb-2">Reflect & Journal</h5>
-                          <p className="text-sm text-gray-300">
-                            Write about how the symbols in this dream might relate to your current life situation.
-                            Consider what your subconscious might be trying to tell you.
-                          </p>
-                        </div>
-                        <div className="p-3 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-lg">
-                          <h5 className="font-medium text-green-300 mb-2">Emotional Processing</h5>
-                          <p className="text-sm text-gray-300">
-                            Take time to sit with the emotions from this dream. Practice meditation or deep breathing to
-                            process any feelings that arose.
-                          </p>
-                        </div>
-                        <div className="p-3 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-lg">
-                          <h5 className="font-medium text-yellow-300 mb-2">Apply Insights</h5>
-                          <p className="text-sm text-gray-300">
-                            Consider how you can apply the wisdom from this dream to your waking life. What changes or
-                            actions might your dream be encouraging?
-                          </p>
-                        </div>
+                        {Array.isArray(selectedEntry.actions) && selectedEntry.actions.length > 0 ? (
+                          selectedEntry.actions.map((action: any, idx: number) => (
+                            <div key={idx} className={`p-3 bg-gradient-to-r ${action.color || 'from-purple-500/10 to-blue-500/10'} rounded-lg`}>
+                              <h5 className={`font-medium mb-2 ${idx === 0 ? 'text-purple-300' : idx === 1 ? 'text-green-300' : 'text-yellow-300'}`}>{action.title}</h5>
+                              <p className="text-sm text-gray-300">{action.description}</p>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="p-3 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg">
+                            <h5 className="font-medium text-purple-300 mb-2">Generate Actionable Steps</h5>
+                            <p className="text-sm text-gray-300">Re-interpret this dream on the dashboard to get personalized actionable steps.</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

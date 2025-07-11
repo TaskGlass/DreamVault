@@ -9,23 +9,32 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { GlassCard } from "@/components/ui/glass-card"
 import { Sparkles, Eye, EyeOff, ArrowLeft } from "lucide-react"
+import { supabase } from "@/lib/supabaseClient"
 
 export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError("")
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
-      // Redirect to dashboard on successful login
-      window.location.href = "/dashboard"
-    }, 2000)
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    setIsLoading(false)
+    if (error) {
+      setError(error.message)
+      return
+    }
+    // Redirect to dashboard on successful login
+    window.location.href = "/dashboard"
   }
 
   return (
@@ -106,6 +115,10 @@ export default function SignInPage() {
                 Forgot password?
               </button>
             </div>
+
+            {error && (
+              <div className="text-red-500 text-sm text-center">{error}</div>
+            )}
 
             <Button
               type="submit"
