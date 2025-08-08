@@ -75,7 +75,7 @@ export function Pricing() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly")
 
   return (
-    <div className="max-w-7xl mx-auto px-4">
+    <div className="max-w-md md:max-w-7xl mx-auto px-4">
       <div className="text-center mb-8">
         <h2 className="text-4xl font-bold text-glow mb-2">Choose Your Spiritual Path</h2>
         <p className="text-base sm:text-xl text-gray-300 max-w-3xl mx-auto">Start free and upgrade as your journey deepens</p>
@@ -121,7 +121,7 @@ export function Pricing() {
       </div>
 
       {/* Plans */}
-      <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
+      <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-md md:max-w-6xl mx-auto">
         {dreamVaultPlans.map((plan) => {
           const Icon = plan.icon
           const isFree = plan.monthlyPrice === "Free"

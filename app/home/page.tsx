@@ -528,7 +528,7 @@ export default function LandingPage() {
 
       {/* Dashboard Preview */}
       <section id="preview" className="py-8">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-md md:max-w-7xl mx-auto px-4">
           <div className="text-center mb-8">
             <h2 className="text-4xl font-bold text-glow mb-4">Experience Your Personal Dream Universe</h2>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
@@ -536,7 +536,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="glass-card rounded-2xl p-6 max-w-6xl mx-auto">
+          <div className="glass-card rounded-2xl p-6 max-w-md md:max-w-6xl mx-auto">
             <Tabs value={previewTab} onValueChange={setPreviewTab}>
               <TabsList className="grid w-full grid-cols-3 bg-white/5 mb-8 h-auto p-1 text-xs sm:text-sm">
                 <TabsTrigger value="journal" className="px-3 py-2 sm:px-4 sm:py-2">
@@ -559,7 +559,7 @@ export default function LandingPage() {
                       { title: "Lost in a Forest", mood: "Anxious", date: "1 week ago" },
                       { title: "Meeting an Old Friend", mood: "Nostalgic", date: "2 weeks ago" },
                     ].map((dream, index) => (
-                      <div key={index} className="glass-card rounded-xl p-4">
+                      <div key={index} className="glass-card rounded-xl p-4 max-w-md mx-auto md:mx-0">
                         <div className="flex justify-between items-start mb-2">
                           <h4 className="font-semibold">{dream.title}</h4>
                           <Badge variant="outline" className="text-xs">
@@ -573,7 +573,7 @@ export default function LandingPage() {
 
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold">Dream Analysis</h3>
-                    <div className="glass-card rounded-xl p-6">
+                    <div className="glass-card rounded-xl p-6 max-w-md mx-auto md:mx-0">
                       <div className="space-y-4">
                         <div>
                           <h4 className="font-medium mb-2">Key Symbols</h4>
@@ -683,7 +683,7 @@ export default function LandingPage() {
 
       {/* Features Section */}
       <section id="features" className="py-12">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-md md:max-w-7xl mx-auto px-4">
           <div className="text-center mb-8">
             <h2 className="text-4xl font-bold text-glow mb-4">Powerful Features for Your Spiritual Journey</h2>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
@@ -695,7 +695,7 @@ export default function LandingPage() {
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="glass-card rounded-2xl p-6 text-center hover:glow transition-transform duration-300 ease-out transform hover:scale-[1.03] hover:-translate-y-1"
+                className="glass-card rounded-2xl p-6 text-center hover:glow transition-transform duration-300 ease-out transform hover:scale-[1.03] hover:-translate-y-1 max-w-md mx-auto md:mx-0"
               >
                 <feature.icon className="h-12 w-12 text-purple-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
@@ -711,7 +711,7 @@ export default function LandingPage() {
         <Pricing />
       </section>
 
-      {/* Footer */}
+      {/* Footer (Tailored from provided spec) */}
       <footer id="about" className="bg-black border-t border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -808,7 +808,7 @@ export default function LandingPage() {
                 <a href="#" className="text-white/50 hover:text-white/80 transition-colors duration-200">
                   <span className="sr-only">GitHub</span>
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 10.956.557-.085.766-.343.766-.711 0-.367-.014-1.584-.022-2.869-3.338.724-4.042-1.416-4.042-1.416-.506-1.285-1.236-1.627-1.236-1.627-1.01-.69.077-.676.077-.676 1.116.078 1.703 1.146 1.703 1.146.993 1.701 2.604 1.209 3.237.924.101-.719.389-1.209.707-1.487-2.47-.281-5.065-1.235-5.065-5.498 0-1.213.434-2.205 1.146-2.981-.115-.282-.497-1.417.108-2.951 0 0 .934-.299 3.058 1.14.888-.247 1.84-.371 2.785-.375.943.004 1.896.128 2.786.375 2.123-1.439 3.056-1.14 3.056-1.14.606 1.534.224 2.669.11 2.951.713.776 1.145 1.768 1.145 2.981 0 4.274-2.599 5.213-5.076 5.487.4.344.755 1.024.755 2.063 0 1.49-.014 2.691-.014 3.056 0 .372.206.632.769.525C20.565 21.389 23.973 17.043 23.973 11.987 23.973 5.367 18.605.001 12.017.001z"/>
+                    <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 10.956.557-.085.766-.343.766-.711 0-.367-.014-1.584-.22-2.869-3.338.724-4.042-1.416-4.042-1.416-.506-1.285-1.236-1.627-1.236-1.627-1.01-.69.077-.676.077-.676 1.116.078 1.703 1.146 1.703 1.146.993 1.701 2.604 1.209 3.237.924.101-.719.389-1.209.707-1.487-2.47-.281-5.065-1.235-5.065-5.498 0-1.213.434-2.205 1.146-2.981-.115-.282-.497-1.417.108-2.951 0 0 .934-.299 3.058 1.14.888-.247 1.84-.371 2.785-.375.943.004 1.896.128 2.786.375 2.123-1.439 3.056-1.14 3.056-1.14.606 1.534.224 2.669.11 2.951.713.776 1.145 1.768 1.145 2.981 0 4.274-2.599 5.213-5.076 5.487.4.344.755 1.024.755 2.063 0 1.49-.014 2.691-.014 3.056 0 .372.206.632.769.525C20.565 21.389 23.973 17.043 23.973 11.987 23.973 5.367 18.605.001 12.017.001z"/>
                   </svg>
                 </a>
                 <a href="#" className="text-white/50 hover:text-white/80 transition-colors duration-200">
