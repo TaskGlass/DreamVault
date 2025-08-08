@@ -77,9 +77,16 @@ export function Navigation() {
       {/* Desktop Sidebar */}
       <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:block lg:w-64">
         <div className="glass-card h-[calc(100vh-2rem)] m-4 rounded-2xl p-6 flex flex-col">
-          <div className="flex items-center mb-8">
-            <Sparkles className="h-8 w-8 text-purple-400 mr-3" />
-            <h1 className="text-xl font-bold text-glow">DreamVault</h1>
+          <div className="flex items-center justify-center h-24 mb-6">
+            <Image
+              src="/logo2.svg"
+              alt="DreamVault Logo"
+              width={48}
+              height={48}
+              className="h-12 w-12"
+              priority
+            />
+            <span className="sr-only">DreamVault</span>
           </div>
 
           <nav className="space-y-2 flex-1">

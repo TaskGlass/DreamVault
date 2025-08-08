@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { Crown, Sparkles, Zap } from "lucide-react"
+import { Check, Crown, Sparkles, Zap } from "lucide-react"
 import Link from "next/link"
 
 type Plan = {
@@ -77,20 +77,20 @@ export function Pricing() {
   return (
     <div className="max-w-7xl mx-auto px-4">
       <div className="text-center mb-8">
-        <h2 className="text-4xl font-bold text-glow mb-4">Choose Your Spiritual Path</h2>
-        <p className="text-xl text-gray-300 max-w-3xl mx-auto">Start free and upgrade as your journey deepens</p>
+        <h2 className="text-4xl font-bold text-glow mb-2">Choose Your Spiritual Path</h2>
+        <p className="text-base sm:text-xl text-gray-300 max-w-3xl mx-auto">Start free and upgrade as your journey deepens</p>
       </div>
 
       {/* Billing Toggle */}
-      <div className="flex justify-center mb-8">
-        <div className="bg-white/5 rounded-xl p-1 border border-white/10">
+      <div className="flex justify-center mb-10">
+        <div className="bg-white/5 rounded-full p-1 border border-white/10">
           <div className="flex">
             <Button
               variant={billingCycle === "monthly" ? "default" : "ghost"}
               size="sm"
               onClick={() => setBillingCycle("monthly")}
               className={cn(
-                "px-6 py-2 rounded-lg transition-all",
+                "px-6 py-2 rounded-full transition-all",
                 billingCycle === "monthly"
                   ? "bg-purple-600 text-white shadow-lg"
                   : "text-gray-300 hover:text-white hover:bg-white/10",
@@ -104,7 +104,7 @@ export function Pricing() {
                 size="sm"
                 onClick={() => setBillingCycle("annual")}
                 className={cn(
-                  "px-6 py-2 rounded-lg transition-all",
+                  "px-6 py-2 rounded-full transition-all",
                   billingCycle === "annual"
                     ? "bg-purple-600 text-white shadow-lg"
                     : "text-gray-300 hover:text-white hover:bg-white/10",
@@ -112,7 +112,7 @@ export function Pricing() {
               >
                 Annual
               </Button>
-              <Badge className="absolute -top-4 -right-4 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+              <Badge className="absolute -top-4 -right-4 bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full">
                 Save 17%
               </Badge>
             </div>
@@ -121,7 +121,7 @@ export function Pricing() {
       </div>
 
       {/* Plans */}
-      <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+      <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
         {dreamVaultPlans.map((plan) => {
           const Icon = plan.icon
           const isFree = plan.monthlyPrice === "Free"
@@ -130,17 +130,22 @@ export function Pricing() {
             <div
               key={plan.name}
               className={cn(
-                "glass-card rounded-2xl p-6 text-center relative flex flex-col h-full",
-                plan.popular && "border-purple-500/50 glow",
+                "rounded-2xl p-6 text-left relative flex flex-col h-full border border-white/10 bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-xl shadow-2xl",
+                plan.popular ? "border-purple-500/50 glow" : "",
               )}
             >
               {plan.popular && (
-                <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-purple-600">Most Popular</Badge>
+                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-600">Most Popular</Badge>
               )}
 
-              <Icon className={cn("h-12 w-12 mx-auto mb-4", plan.color)} />
-              <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-              <p className="text-3xl font-bold mb-2">{displayPrice}</p>
+              <div className="flex items-center gap-3 mb-3">
+                <Icon className={cn("h-10 w-10", plan.color)} />
+                <h3 className="text-2xl font-bold">{plan.name}</h3>
+              </div>
+              <div className="flex items-baseline gap-2 mb-4">
+                <span className="text-3xl font-bold">{displayPrice}</span>
+                <span className="text-sm text-gray-400">{billingCycle === "monthly" ? "/month" : "/year"}</span>
+              </div>
               {billingCycle === "annual" && plan.annualDisplay && plan.name !== "Dream Lite" && (
                 <div className="mb-4">
                   <p className="text-sm text-gray-400">{plan.annualDisplay}</p>
@@ -150,11 +155,11 @@ export function Pricing() {
                 </div>
               )}
 
-              <ul className="space-y-3 mb-6 flex-grow text-left">
+              <ul className="space-y-3 mb-6 flex-grow">
                 {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-center text-sm">
-                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-purple-400 mr-3" />
-                    {feature}
+                  <li key={feature} className="flex items-center text-sm text-gray-200">
+                    <Check className="h-4 w-4 text-green-400 mr-2 flex-shrink-0" />
+                    <span>{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -180,5 +185,6 @@ export function Pricing() {
 }
 
 export default Pricing
+
 
 

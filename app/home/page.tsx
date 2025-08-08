@@ -26,6 +26,7 @@ import {
   X,
 } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation"
 
@@ -146,10 +147,12 @@ export default function LandingPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showLoginPassword, setShowLoginPassword] = useState(false)
   const [billingCycle, setBillingCycle] = useState("monthly")
+  const [gradientVisible, setGradientVisible] = useState(true)
 
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50)
+      setGradientVisible(window.scrollY < 100)
     }
 
     window.addEventListener("scroll", handleScroll)
@@ -165,21 +168,29 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Site-wide seamless animated background */}
-      <BackgroundGradientAnimation
-        gradientBackgroundStart="rgb(10, 15, 30)"
-        gradientBackgroundEnd="rgb(25, 35, 55)"
-        firstColor="147, 51, 234"
-        secondColor="168, 85, 247"
-        thirdColor="192, 132, 252"
-        fourthColor="139, 69, 19"
-        fifthColor="75, 0, 130"
-        size="140%"
-        blendingValue="soft-light"
-        containerClassName="fixed inset-0 -z-10 pointer-events-none"
-        className="opacity-60"
-      />
+    <main className="min-h-screen bg-black">
+      {/* Background Gradient Animation */}
+      <div className={`pointer-events-none absolute top-0 left-0 right-0 h-[100svh] transition-opacity duration-700 ease-out ${
+          gradientVisible ? 'opacity-100' : 'opacity-0'
+        } [mask-image:linear-gradient(to_bottom,rgba(0,0,0,1)_0%,rgba(0,0,0,1)_65%,rgba(0,0,0,0)_100%)] [-webkit-mask-image:linear-gradient(to_bottom,rgba(0,0,0,1)_0%,rgba(0,0,0,1)_65%,rgba(0,0,0,0)_100%)]`}>
+        <BackgroundGradientAnimation
+          gradientBackgroundStart="rgb(0, 0, 0)"
+          gradientBackgroundEnd="rgb(0, 0, 0)"
+          firstColor="147, 51, 234"
+          secondColor="168, 85, 247"
+          thirdColor="192, 132, 252"
+          fourthColor="139, 69, 19"
+          fifthColor="75, 0, 130"
+          pointerColor="147, 51, 234"
+          size="80%"
+          blendingValue="multiply"
+          containerClassName="absolute inset-0 h-full w-full"
+          className="opacity-30"
+          interactive={true}
+        />
+      </div>
+      
+      {/* Background Pattern removed to keep a single, uniform background */}
       {/* Navigation Bar */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out ${
         scrolled ? 'pt-4 px-4' : 'pt-6 px-0'
@@ -301,22 +312,10 @@ export default function LandingPage() {
       )}
 
       {/* Hero Section */}
-      <section id="home" className="relative overflow-hidden pt-28">
-        {/* Hero-local gradient overlay (adds depth on top of site-wide bg) */}
-        <BackgroundGradientAnimation
-          gradientBackgroundStart="transparent"
-          gradientBackgroundEnd="transparent"
-          firstColor="147, 51, 234"
-          secondColor="168, 85, 247"
-          thirdColor="192, 132, 252"
-          fourthColor="139, 69, 19"
-          fifthColor="75, 0, 130"
-          size="130%"
-          blendingValue="soft-light"
-          containerClassName="absolute inset-0 pointer-events-none"
-          className="opacity-50"
-        />
-        <div className="relative max-w-7xl mx-auto px-4 py-12 z-10">
+      <section id="home" className="relative overflow-hidden pt-28 min-h-screen min-h-[100svh]">
+        {/* Hero bottom fade to blend gradient into a solid page background */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-black" />
+        <div className="relative max-w-7xl mx-auto px-4 py-12 z-10 min-h-[calc(100vh-7rem)] min-h-[calc(100svh-7rem)] flex flex-col justify-center">
           <div className="text-center mb-8">
             <div className="flex justify-center mb-6">
               <img
@@ -702,58 +701,116 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-10 border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 items-center gap-6">
+      <footer id="about" className="bg-black border-t border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* Brand */}
-            <div className="flex justify-center md:justify-start">
-              <Link
-                href="/home"
-                className="flex items-center hover:opacity-90 transition-opacity"
-                onClick={() => window.scrollTo(0, 0)}
-              >
-                <img
-                  src="/logo.svg"
-                  alt="DreamVault Logo"
-                  className="h-8 w-auto"
+            <div className="col-span-1 md:col-span-2">
+              <div className="mb-4">
+                <Image
+                  src="/logo2.svg"
+                  alt="DreamVault"
+                  width={120}
+                  height={40}
+                  className="h-9 w-auto"
+                  priority
                 />
-                <span className="sr-only">DreamVault</span>
-              </Link>
+              </div>
+              <p className="text-white/70 mb-6 max-w-md leading-relaxed">
+                AI-powered dream interpretation, tarot readings, horoscope insights, and a powerful dream journal to help you unlock the mysteries of your subconscious.
+              </p>
+              <div className="text-white/60 text-sm">© 2025 DreamVault. All rights reserved.</div>
             </div>
 
-            {/* Contact */}
-            <div className="text-center">
-              <div className="text-gray-300 font-medium">Customer Service</div>
-              <div className="mt-1 flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-gray-400">
-                <a href="mailto:support@dreamvault.ai" className="hover:text-purple-400 transition-colors">
-                  support@dreamvault.ai
+            {/* Quick Links */}
+            <div>
+              <h3 className="text-white font-semibold mb-4">Quick Links</h3>
+              <ul className="space-y-3">
+                <li>
+                  <button
+                    onClick={() => scrollToSection("#home")}
+                    className="text-white/60 hover:text-white transition-colors duration-200"
+                  >
+                    Home
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => scrollToSection("#features")}
+                    className="text-white/60 hover:text-white transition-colors duration-200"
+                  >
+                    Features
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => scrollToSection("#pricing")}
+                    className="text-white/60 hover:text-white transition-colors duration-200"
+                  >
+                    Pricing
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            {/* Contact & Support */}
+            <div>
+              <h3 className="text-white font-semibold mb-4">Contact & Support</h3>
+              <ul className="space-y-3">
+                <li>
+                  <a
+                    href="mailto:support@dreamvault.ai"
+                    className="text-white/60 hover:text-white transition-colors duration-200 flex items-center"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    support@dreamvault.ai
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="tel:+18336200635"
+                    className="text-white/60 hover:text-white transition-colors duration-200 flex items-center"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                    +1 (833) 620-0635
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom Section */}
+          <div className="mt-12 pt-8 border-t border-white/10">
+            <div className="flex flex-col md:flex-row justify-between items-center">
+              <div className="text-white/50 text-sm mb-4 md:mb-0">Powered by AI</div>
+              <div className="flex space-x-6">
+                <a href="#" className="text-white/50 hover:text-white/80 transition-colors duration-200">
+                  <span className="sr-only">Twitter</span>
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                  </svg>
                 </a>
-                <span className="hidden sm:block text-white/20">•</span>
-                <a href="tel:+18336200635" className="hover:text-purple-400 transition-colors">
-                  +1 (833) 620-0635
+                <a href="#" className="text-white/50 hover:text-white/80 transition-colors duration-200">
+                  <span className="sr-only">GitHub</span>
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 10.956.557-.085.766-.343.766-.711 0-.367-.014-1.584-.022-2.869-3.338.724-4.042-1.416-4.042-1.416-.506-1.285-1.236-1.627-1.236-1.627-1.01-.69.077-.676.077-.676 1.116.078 1.703 1.146 1.703 1.146.993 1.701 2.604 1.209 3.237.924.101-.719.389-1.209.707-1.487-2.47-.281-5.065-1.235-5.065-5.498 0-1.213.434-2.205 1.146-2.981-.115-.282-.497-1.417.108-2.951 0 0 .934-.299 3.058 1.14.888-.247 1.84-.371 2.785-.375.943.004 1.896.128 2.786.375 2.123-1.439 3.056-1.14 3.056-1.14.606 1.534.224 2.669.11 2.951.713.776 1.145 1.768 1.145 2.981 0 4.274-2.599 5.213-5.076 5.487.4.344.755 1.024.755 2.063 0 1.49-.014 2.691-.014 3.056 0 .372.206.632.769.525C20.565 21.389 23.973 17.043 23.973 11.987 23.973 5.367 18.605.001 12.017.001z"/>
+                  </svg>
+                </a>
+                <a href="#" className="text-white/50 hover:text-white/80 transition-colors duration-200">
+                  <span className="sr-only">LinkedIn</span>
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                  </svg>
                 </a>
               </div>
             </div>
-
-            {/* Links */}
-            <div className="flex justify-center md:justify-end gap-6 text-sm text-gray-400">
-              <Link href="/privacy" onClick={() => window.scrollTo(0, 0)} className="hover:text-purple-400">
-                Privacy Policy
-              </Link>
-              <Link href="/terms" onClick={() => window.scrollTo(0, 0)} className="hover:text-purple-400">
-                Terms
-              </Link>
-              <Link href="/support" onClick={() => window.scrollTo(0, 0)} className="hover:text-purple-400">
-                Support
-              </Link>
-            </div>
-          </div>
-
-          <div className="mt-8 text-center text-xs text-gray-500">
-            © 2024 DreamVault. All rights reserved.
           </div>
         </div>
       </footer>
-    </div>
+    </main>
   )
 }

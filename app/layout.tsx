@@ -28,7 +28,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <div className="min-h-screen fluid-background">{children}</div>
+          <div className="min-h-screen bg-black">{children}</div>
           <Toaster />
         </ThemeProvider>
       </body>

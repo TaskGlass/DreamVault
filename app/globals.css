@@ -87,104 +87,65 @@
 /* Background gradient animations */
 @keyframes first {
   0% {
-    transform: translate(0, 0) scale(1) rotate(0deg);
-  }
-  25% {
-    transform: translate(20px, -15px) scale(1.05) rotate(90deg);
-  }
-  50% {
-    transform: translate(-10px, 25px) scale(1.1) rotate(180deg);
-  }
-  75% {
-    transform: translate(15px, -20px) scale(1.05) rotate(270deg);
+    transform: rotate(0deg);
   }
   100% {
-    transform: translate(0, 0) scale(1) rotate(360deg);
+    transform: rotate(360deg);
   }
 }
 
 @keyframes second {
   0% {
-    transform: translate(0, 0) scale(1) rotate(0deg);
-  }
-  33% {
-    transform: translate(-25px, 10px) scale(1.08) rotate(-120deg);
-  }
-  66% {
-    transform: translate(20px, -30px) scale(1.12) rotate(-240deg);
+    transform: rotate(0deg);
   }
   100% {
-    transform: translate(0, 0) scale(1) rotate(-360deg);
+    transform: rotate(360deg);
   }
 }
 
 @keyframes third {
   0% {
-    transform: translate(0, 0) scale(1) rotate(0deg);
-  }
-  20% {
-    transform: translate(30px, -10px) scale(1.1) rotate(72deg);
-  }
-  40% {
-    transform: translate(-15px, 35px) scale(1.15) rotate(144deg);
-  }
-  60% {
-    transform: translate(25px, -25px) scale(1.1) rotate(216deg);
-  }
-  80% {
-    transform: translate(-20px, 15px) scale(1.05) rotate(288deg);
+    transform: rotate(0deg);
   }
   100% {
-    transform: translate(0, 0) scale(1) rotate(360deg);
+    transform: rotate(-360deg);
   }
 }
 
 @keyframes fourth {
   0% {
-    transform: translate(0, 0) scale(1) rotate(0deg);
-  }
-  50% {
-    transform: translate(-30px, -20px) scale(1.06) rotate(-180deg);
+    transform: rotate(0deg);
   }
   100% {
-    transform: translate(0, 0) scale(1) rotate(-360deg);
+    transform: rotate(360deg);
   }
 }
 
 @keyframes fifth {
   0% {
-    transform: translate(0, 0) scale(1) rotate(0deg);
-  }
-  25% {
-    transform: translate(15px, 25px) scale(1.08) rotate(90deg);
-  }
-  50% {
-    transform: translate(-25px, -15px) scale(1.12) rotate(180deg);
-  }
-  75% {
-    transform: translate(20px, 10px) scale(1.08) rotate(270deg);
+    transform: rotate(0deg);
   }
   100% {
-    transform: translate(0, 0) scale(1) rotate(360deg);
+    transform: rotate(-360deg);
   }
 }
 
 .animate-first {
-  animation: first 60s ease-in-out infinite;
+  animation: first 8s linear infinite;
 }
 
 .animate-second {
-  animation: second 80s ease-in-out infinite;
+  animation: second 12s linear infinite;
 }
 
 .animate-third {
-  animation: third 100s ease-in-out infinite;
+  animation: third 15s linear infinite;
 }
 
 .animate-fourth {
-  animation: fourth 70s ease-in-out infinite;
+  animation: fourth 18s linear infinite;
 }
 
 .animate-fifth {
-  animation: fifth 90s ease-in-out infinite;
+  animation: fifth 22s linear infinite;
 }
