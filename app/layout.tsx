@@ -11,7 +11,12 @@ export const metadata: Metadata = {
   title: "DreamVault - AI Dream Interpretation",
   description:
     "Unlock the secrets of your dreams with AI-powered interpretations, tarot readings, and personalized insights",
-    generator: 'v0.dev'
+  generator: 'v0.dev',
+  icons: {
+    icon: '/logo2.svg',
+    shortcut: '/logo2.svg',
+    apple: '/logo2.svg',
+  },
 }
 
 export default function RootLayout({

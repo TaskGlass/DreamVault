@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { Pricing } from "@/components/ui/pricing"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
@@ -26,6 +27,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation"
 
 const navigationItems = [
   { name: "Home", href: "#home" },
@@ -164,102 +166,165 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen">
+      {/* Site-wide seamless animated background */}
+      <BackgroundGradientAnimation
+        gradientBackgroundStart="rgb(10, 15, 30)"
+        gradientBackgroundEnd="rgb(25, 35, 55)"
+        firstColor="147, 51, 234"
+        secondColor="168, 85, 247"
+        thirdColor="192, 132, 252"
+        fourthColor="139, 69, 19"
+        fifthColor="75, 0, 130"
+        size="140%"
+        blendingValue="soft-light"
+        containerClassName="fixed inset-0 -z-10 pointer-events-none"
+        className="opacity-60"
+      />
       {/* Navigation Bar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 p-4 h-20">
-        <div className="max-w-7xl mx-auto">
-          <div
-            className={`glass-card rounded-2xl px-6 py-4 transition-all duration-300 h-full flex items-center ${scrolled ? "glow" : ""}`}
-          >
-            <div className="flex items-center justify-between w-full">
-              {/* Logo */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out ${
+        scrolled ? 'pt-4 px-4' : 'pt-6 px-0'
+      }`}>
+        <div className={`max-w-7xl mx-auto transition-all duration-500 ease-out relative ${
+          scrolled 
+            ? 'bg-gradient-to-r from-purple-900/30 via-purple-800/20 to-purple-900/30 backdrop-blur-2xl border border-purple-500/20 rounded-2xl shadow-2xl shadow-purple-900/50 px-6' 
+            : 'bg-transparent border border-transparent px-4 sm:px-6 lg:px-8'
+        }`}>
+          {/* Glassmorphism overlay when scrolled */}
+          {scrolled && (
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-transparent to-purple-500/5 rounded-2xl pointer-events-none" />
+          )}
+          <div className="flex items-center justify-between h-16 relative z-10">
+            {/* Logo */}
+            <div className="flex items-center">
               <div className="flex items-center">
-                <Sparkles className="h-8 w-8 text-purple-400 mr-3" />
-                <span className="text-xl font-bold text-glow">DreamVault</span>
+                <img 
+                  src="/logo.svg" 
+                  alt="DreamVault Logo" 
+                  className="h-8 w-auto transition-all duration-700"
+                />
               </div>
+            </div>
 
-              {/* Desktop Navigation */}
-              <div className="hidden md:flex items-center space-x-8">
-                {navigationItems.map((item) => (
-                  <button
-                    key={item.name}
-                    onClick={() => scrollToSection(item.href)}
-                    className="text-gray-300 hover:text-purple-400 transition-colors font-medium px-3 py-2 rounded-lg hover:bg-white/5"
-                  >
-                    {item.name}
-                  </button>
-                ))}
-              </div>
+            {/* Navigation Links */}
+            <div className="hidden md:flex items-center space-x-8">
+              {navigationItems.map((item) => (
+                <button
+                  key={item.name}
+                  onClick={() => scrollToSection(item.href)}
+                  className={`transition-all duration-300 text-sm font-medium ${
+                    scrolled 
+                      ? 'text-white/80 hover:text-white hover:bg-white/10 px-3 py-1.5 rounded-lg' 
+                      : 'text-white/70 hover:text-white'
+                  }`}
+                >
+                  {item.name}
+                </button>
+              ))}
+            </div>
 
-              {/* Desktop Auth Buttons */}
-              <div className="hidden md:flex items-center space-x-4">
-                <Link href="/sign-in">
-                  <Button variant="outline" className="bg-white/5 border-white/20 hover:bg-white/10">
-                    Sign In
-                  </Button>
-                </Link>
-                <Link href="/sign-up">
-                  <Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
-                    Get Started
-                  </Button>
-                </Link>
-              </div>
+            {/* CTA Buttons */}
+            <div className="hidden sm:flex items-center space-x-3">
+              <Link href="/sign-in">
+                <Button
+                  className={`text-white px-4 py-2 font-medium transition-all duration-300 ${
+                    scrolled 
+                      ? 'bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 rounded-xl' 
+                      : 'bg-white/10 hover:bg-white/20 rounded-lg border border-white/20'
+                  }`}
+                >
+                  Sign In
+                </Button>
+              </Link>
+              <Link href="/sign-up">
+                <Button
+                  className={`text-white px-6 py-2 font-medium transition-all duration-300 ${
+                    scrolled 
+                      ? 'bg-purple-600/90 hover:bg-purple-600 backdrop-blur-sm border border-purple-500/30 rounded-xl shadow-lg shadow-purple-600/25' 
+                      : 'bg-purple-600 hover:bg-purple-700 rounded-lg'
+                  }`}
+                >
+                  Interpret Dream
+                </Button>
+              </Link>
+            </div>
 
-              {/* Mobile Menu Button */}
-              <button
-                className="md:hidden p-2 rounded-lg hover:bg-white/10 transition-colors"
+            {/* Mobile Menu Button */}
+            <div className="md:hidden">
+              <Button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className={`text-white p-2 ${
+                  scrolled 
+                    ? 'bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 rounded-xl' 
+                    : 'bg-white/10 hover:bg-white/20 rounded-lg border border-white/20'
+                }`}
               >
                 {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-              </button>
+              </Button>
             </div>
           </div>
-
-          {/* Mobile Menu */}
-          {mobileMenuOpen && (
-            <div className="md:hidden mt-4 absolute left-4 right-4">
-              <div className="glass-card rounded-2xl p-4 space-y-4 glow">
-                {navigationItems.map((item) => (
-                  <button
-                    key={item.name}
-                    onClick={() => scrollToSection(item.href)}
-                    className="block w-full text-left px-4 py-3 text-gray-300 hover:text-purple-400 hover:bg-white/5 rounded-xl transition-colors font-medium"
-                  >
-                    {item.name}
-                  </button>
-                ))}
-                <div className="border-t border-white/10 pt-4">
-                  <Link href="/sign-in">
-                    <Button variant="outline" className="w-full bg-white/5 border-white/20 hover:bg-white/10">
-                      Sign In
-                    </Button>
-                  </Link>
-                  <div className="mt-4">
-                    <Link href="/sign-up">
-                      <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
-                        Get Started
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section id="home" className="relative overflow-hidden pt-28">
-        <div className="relative max-w-7xl mx-auto px-4 py-12">
-          <div className="text-center mb-8">
-            <div className="flex justify-center mb-6">
-              <div className="p-4 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-sm">
-                <Moon className="h-16 w-16 text-purple-300" />
+      {/* Mobile Navigation Menu */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
+          <div className="fixed top-20 left-4 right-4 bg-gradient-to-b from-purple-900/95 to-purple-800/95 backdrop-blur-2xl border border-purple-500/20 rounded-2xl shadow-2xl shadow-purple-900/50 p-6">
+            <div className="space-y-4">
+              {navigationItems.map((item) => (
+                <button
+                  key={item.name}
+                  onClick={() => {
+                    scrollToSection(item.href);
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center px-4 py-3 rounded-xl transition-all text-left text-white/80 hover:text-white hover:bg-white/10"
+                >
+                  {item.name}
+                </button>
+              ))}
+              <div className="border-t border-white/10 pt-4">
+                <Link href="/sign-in">
+                  <Button className="w-full bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/sign-up" className="block mt-2">
+                  <Button className="w-full bg-purple-600 hover:bg-purple-700 rounded-xl text-white">
+                    Interpret Dream
+                  </Button>
+                </Link>
               </div>
             </div>
+          </div>
+        </div>
+      )}
 
-            <h1 className="text-5xl md:text-7xl font-bold text-glow mb-6">
-              Dream<span className="text-purple-400">Vault</span>
-            </h1>
+      {/* Hero Section */}
+      <section id="home" className="relative overflow-hidden pt-28">
+        {/* Hero-local gradient overlay (adds depth on top of site-wide bg) */}
+        <BackgroundGradientAnimation
+          gradientBackgroundStart="transparent"
+          gradientBackgroundEnd="transparent"
+          firstColor="147, 51, 234"
+          secondColor="168, 85, 247"
+          thirdColor="192, 132, 252"
+          fourthColor="139, 69, 19"
+          fifthColor="75, 0, 130"
+          size="130%"
+          blendingValue="soft-light"
+          containerClassName="absolute inset-0 pointer-events-none"
+          className="opacity-50"
+        />
+        <div className="relative max-w-7xl mx-auto px-4 py-12 z-10">
+          <div className="text-center mb-8">
+            <div className="flex justify-center mb-6">
+              <img
+                src="/logo.svg"
+                alt="DreamVault"
+                className="h-16 md:h-20 w-auto"
+              />
+            </div>
 
             <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
               Unlock the mysteries of your subconscious with AI-powered dream interpretation, tarot readings, and
@@ -273,7 +338,7 @@ export default function LandingPage() {
                   className="group relative bg-gradient-to-r from-purple-600 via-purple-500 to-pink-600 hover:from-purple-700 hover:via-purple-600 hover:to-pink-700 text-lg px-10 py-4 h-[60px] font-semibold shadow-2xl shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-300 hover:scale-105 border-0 w-full"
                 >
                   <span className="relative z-10 flex items-center justify-center">
-                    Start Your Journey
+                    Interpret Dream
                     <ArrowRight className="ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
                   </span>
                   <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg" />
@@ -633,143 +698,59 @@ export default function LandingPage() {
 
       {/* Pricing Section */}
       <section id="pricing" className="py-12">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-8">
-            <h2 className="text-4xl font-bold text-glow mb-4">Choose Your Spiritual Path</h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">Start free and upgrade as your journey deepens</p>
-          </div>
-
-          {/* Billing Toggle */}
-          <div className="flex justify-center mb-8">
-            <div className="bg-white/5 rounded-xl p-1 border border-white/10">
-              <div className="flex">
-                <Button
-                  variant={billingCycle === "monthly" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setBillingCycle("monthly")}
-                  className={`px-6 py-2 rounded-lg transition-all ${
-                    billingCycle === "monthly"
-                      ? "bg-purple-600 text-white shadow-lg"
-                      : "text-gray-300 hover:text-white hover:bg-white/10"
-                  }`}
-                >
-                  Monthly
-                </Button>
-                <div className="relative">
-                  <Button
-                    variant={billingCycle === "annual" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setBillingCycle("annual")}
-                    className={`px-6 py-2 rounded-lg transition-all ${
-                      billingCycle === "annual"
-                        ? "bg-purple-600 text-white shadow-lg"
-                        : "text-gray-300 hover:text-white hover:bg-white/10"
-                    }`}
-                  >
-                    Annual
-                  </Button>
-                  <Badge className="absolute -top-4 -right-4 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-                    Save 17%
-                  </Badge>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {plans.map((plan, index) => (
-              <div
-                key={index}
-                className={cn(
-                  "glass-card rounded-2xl p-6 text-center relative flex flex-col h-full",
-                  plan.popular ? "border-purple-500/50 glow" : "",
-                )}
-              >
-                {plan.popular && (
-                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-purple-600">
-                    Most Popular
-                  </Badge>
-                )}
-
-                <plan.icon className={`h-12 w-12 ${plan.color} mx-auto mb-4`} />
-                <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                <p className="text-3xl font-bold mb-2">
-                  {billingCycle === "monthly" ? plan.monthlyPrice : plan.annualPrice}
-                </p>
-                {billingCycle === "annual" && plan.annualDisplay && plan.name !== "Dream Lite" && (
-                  <div className="mb-4">
-                    <p className="text-sm text-gray-400">{plan.annualDisplay}</p>
-                    {plan.annualSavings && <p className="text-sm text-green-400 font-medium">{plan.annualSavings}</p>}
-                  </div>
-                )}
-
-                <ul className="space-y-3 mb-6 flex-grow">
-                  {plan.features.map((feature, featureIndex) => (
-                    <li key={featureIndex} className="flex items-center text-sm">
-                      <Check className="h-4 w-4 text-green-400 mr-3 flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-
-                <Link href="/sign-up">
-                  <Button
-                    className={`w-full mt-auto ${
-                      plan.popular ? "bg-gradient-to-r from-purple-600 to-blue-600" : "bg-white/10 hover:bg-white/20"
-                    }`}
-                  >
-                    {plan.price === "Free" ? "Get Started" : "Choose Plan"}
-                  </Button>
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
+        <Pricing />
       </section>
 
       {/* Footer */}
-      <footer className="py-8 border-t border-white/10">
+      <footer className="py-10 border-t border-white/10">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <Link
-              href="/home"
-              className="flex items-center mb-4 md:mb-0 hover:opacity-80 transition-opacity"
-              onClick={() => window.scrollTo(0, 0)}
-            >
-              <Sparkles className="h-8 w-8 text-purple-400 mr-3" />
-              <span className="text-xl font-bold text-glow">DreamVault</span>
-            </Link>
+          <div className="grid grid-cols-1 md:grid-cols-3 items-center gap-6">
+            {/* Brand */}
+            <div className="flex justify-center md:justify-start">
+              <Link
+                href="/home"
+                className="flex items-center hover:opacity-90 transition-opacity"
+                onClick={() => window.scrollTo(0, 0)}
+              >
+                <img
+                  src="/logo.svg"
+                  alt="DreamVault Logo"
+                  className="h-8 w-auto"
+                />
+                <span className="sr-only">DreamVault</span>
+              </Link>
+            </div>
 
-            {/* Customer Service Contact */}
-            <div className="flex flex-col items-center md:items-start mb-4 md:mb-0 text-sm text-gray-400">
-              <div className="mb-1">
-                <span className="text-gray-300">Customer Service:</span>
-              </div>
-              <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-1 sm:space-y-0 text-center md:text-left">
+            {/* Contact */}
+            <div className="text-center">
+              <div className="text-gray-300 font-medium">Customer Service</div>
+              <div className="mt-1 flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-gray-400">
                 <a href="mailto:support@dreamvault.ai" className="hover:text-purple-400 transition-colors">
                   support@dreamvault.ai
                 </a>
+                <span className="hidden sm:block text-white/20">•</span>
                 <a href="tel:+18336200635" className="hover:text-purple-400 transition-colors">
                   +1 (833) 620-0635
                 </a>
               </div>
             </div>
 
-            <div className="flex space-x-6 text-sm text-gray-400">
-              <Link href="/privacy" onClick={() => window.scrollTo(0, 0)}>
-                <button className="hover:text-purple-400">Privacy Policy</button>
+            {/* Links */}
+            <div className="flex justify-center md:justify-end gap-6 text-sm text-gray-400">
+              <Link href="/privacy" onClick={() => window.scrollTo(0, 0)} className="hover:text-purple-400">
+                Privacy Policy
               </Link>
-              <Link href="/terms" onClick={() => window.scrollTo(0, 0)}>
-                <button className="hover:text-purple-400">Terms of Service</button>
+              <Link href="/terms" onClick={() => window.scrollTo(0, 0)} className="hover:text-purple-400">
+                Terms
               </Link>
-              <Link href="/support" onClick={() => window.scrollTo(0, 0)}>
-                <button className="hover:text-purple-400">Support</button>
+              <Link href="/support" onClick={() => window.scrollTo(0, 0)} className="hover:text-purple-400">
+                Support
               </Link>
             </div>
           </div>
 
-          <div className="text-left mt-8 text-gray-400 text-sm">
-            © 2024 DreamVault. Unlock the mysteries of your mind.
+          <div className="mt-8 text-center text-xs text-gray-500">
+            © 2024 DreamVault. All rights reserved.
           </div>
         </div>
       </footer>

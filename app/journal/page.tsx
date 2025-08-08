@@ -8,9 +8,10 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
-import { BookOpen, Search, Filter, Plus, Calendar, Heart, Brain, Zap, Trash2, MoreVertical } from "lucide-react"
+import { BookOpen, Search, Filter, Plus, Calendar, Heart, Zap, Trash2, MoreVertical } from "lucide-react"
 import { supabase } from "@/lib/supabaseClient"
 import { useToast } from "@/hooks/use-toast"
+import { DreamInterpretation } from "@/components/dream-interpretation"
 
 const moodColors = {
   Peaceful: "bg-blue-500/20 text-blue-300",
@@ -128,7 +129,7 @@ export default function JournalPage() {
     .filter(
       (entry) =>
         entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        entry.content.toLowerCase().includes(searchTerm.toLowerCase()),
+        entry.description.toLowerCase().includes(searchTerm.toLowerCase()),
     )
     .sort((a, b) => {
       const dateA = new Date(a.date).getTime()
@@ -298,10 +299,10 @@ export default function JournalPage() {
                       })}
                     </p>
 
-                    <p className="text-sm text-gray-300 mb-3 line-clamp-2">{entry.content}</p>
+                    <p className="text-sm text-gray-300 mb-3 line-clamp-2">{entry.description}</p>
 
                     <div className="flex flex-wrap gap-1">
-                      {entry.symbols.slice(0, 3).map((symbol: string, index: number) => (
+                      {entry.symbols?.slice(0, 3).map((symbol: string, index: number) => (
                         <Badge key={index} variant="outline" className="text-xs">
                           {symbol}
                         </Badge>
@@ -378,13 +379,13 @@ export default function JournalPage() {
 
                     <div>
                       <h4 className="font-medium mb-2">Dream Content</h4>
-                      <p className="text-gray-300 text-sm leading-relaxed">{selectedEntry.content}</p>
+                      <p className="text-gray-300 text-sm leading-relaxed">{selectedEntry.description}</p>
                     </div>
 
                     <div>
                       <h4 className="font-medium mb-2">Key Symbols</h4>
                       <div className="flex flex-wrap gap-2">
-                        {selectedEntry.symbols.map((symbol: string, index: number) => (
+                        {selectedEntry.symbols?.map((symbol: string, index: number) => (
                           <Badge key={index} variant="secondary" className="bg-purple-500/20">
                             {symbol}
                           </Badge>
@@ -392,38 +393,20 @@ export default function JournalPage() {
                       </div>
                     </div>
 
-                    <div>
-                      <h4 className="font-medium mb-2">Dream Interpretation</h4>
-                      <p className="text-gray-300 text-sm leading-relaxed">{selectedEntry.ai_interpretation || selectedEntry.interpretation}</p>
-                    </div>
-
-                    <div className="pt-4">
-                      <h4 className="font-medium mb-3 flex items-center">
-                        <Zap className="h-4 w-4 mr-2 text-yellow-400" />
-                        Actionable Steps
-                      </h4>
-                      <div className="space-y-3">
-                        {Array.isArray(selectedEntry.actions) && selectedEntry.actions.length > 0 ? (
-                          selectedEntry.actions.map((action: any, idx: number) => (
-                            <div key={idx} className={`p-3 bg-gradient-to-r ${action.color || 'from-purple-500/10 to-blue-500/10'} rounded-lg`}>
-                              <h5 className={`font-medium mb-2 ${idx === 0 ? 'text-purple-300' : idx === 1 ? 'text-green-300' : 'text-yellow-300'}`}>{action.title}</h5>
-                              <p className="text-sm text-gray-300">{action.description}</p>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="p-3 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg">
-                            <h5 className="font-medium text-purple-300 mb-2">Generate Actionable Steps</h5>
-                            <p className="text-sm text-gray-300">Re-interpret this dream on the dashboard to get personalized actionable steps.</p>
-                          </div>
-                        )}
+                    {selectedEntry.interpretation ? (
+                      <div className="mt-6">
+                        <DreamInterpretation 
+                          content={selectedEntry.interpretation}
+                          showTitle={true}
+                        />
                       </div>
-                    </div>
+                    ) : null}
                   </div>
                 </GlassCard>
               ) : (
                 <GlassCard>
                   <div className="text-center py-12">
-                    <Brain className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-400">Select a dream entry to view details and interpretation</p>
                   </div>
                 </GlassCard>

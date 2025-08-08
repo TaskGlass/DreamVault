@@ -66,18 +66,125 @@
 
 /* Fluid background */
 .fluid-background {
-  background: radial-gradient(ellipse at top, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-    radial-gradient(ellipse at bottom, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-    radial-gradient(ellipse at left, rgba(139, 69, 19, 0.2) 0%, transparent 50%),
-    radial-gradient(ellipse at right, rgba(75, 0, 130, 0.3) 0%, transparent 50%),
+  background: 
+    radial-gradient(ellipse at top, rgba(147, 51, 234, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at left, rgba(192, 132, 252, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at right, rgba(139, 69, 19, 0.1) 0%, transparent 50%),
     linear-gradient(
       135deg,
-      rgba(15, 23, 42, 1) 0%,
-      rgba(30, 41, 59, 1) 25%,
-      rgba(51, 65, 85, 1) 50%,
-      rgba(30, 41, 59, 1) 75%,
-      rgba(15, 23, 42, 1) 100%
+      rgba(10, 15, 30, 1) 0%,
+      rgba(25, 35, 55, 1) 25%,
+      rgba(40, 50, 70, 1) 50%,
+      rgba(25, 35, 55, 1) 75%,
+      rgba(10, 15, 30, 1) 100%
     );
   background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
   background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* Background gradient animations */
+@keyframes first {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  25% {
+    transform: translate(20px, -15px) scale(1.05) rotate(90deg);
+  }
+  50% {
+    transform: translate(-10px, 25px) scale(1.1) rotate(180deg);
+  }
+  75% {
+    transform: translate(15px, -20px) scale(1.05) rotate(270deg);
+  }
+  100% {
+    transform: translate(0, 0) scale(1) rotate(360deg);
+  }
+}
+
+@keyframes second {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  33% {
+    transform: translate(-25px, 10px) scale(1.08) rotate(-120deg);
+  }
+  66% {
+    transform: translate(20px, -30px) scale(1.12) rotate(-240deg);
+  }
+  100% {
+    transform: translate(0, 0) scale(1) rotate(-360deg);
+  }
+}
+
+@keyframes third {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  20% {
+    transform: translate(30px, -10px) scale(1.1) rotate(72deg);
+  }
+  40% {
+    transform: translate(-15px, 35px) scale(1.15) rotate(144deg);
+  }
+  60% {
+    transform: translate(25px, -25px) scale(1.1) rotate(216deg);
+  }
+  80% {
+    transform: translate(-20px, 15px) scale(1.05) rotate(288deg);
+  }
+  100% {
+    transform: translate(0, 0) scale(1) rotate(360deg);
+  }
+}
+
+@keyframes fourth {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  50% {
+    transform: translate(-30px, -20px) scale(1.06) rotate(-180deg);
+  }
+  100% {
+    transform: translate(0, 0) scale(1) rotate(-360deg);
+  }
+}
+
+@keyframes fifth {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  25% {
+    transform: translate(15px, 25px) scale(1.08) rotate(90deg);
+  }
+  50% {
+    transform: translate(-25px, -15px) scale(1.12) rotate(180deg);
+  }
+  75% {
+    transform: translate(20px, 10px) scale(1.08) rotate(270deg);
+  }
+  100% {
+    transform: translate(0, 0) scale(1) rotate(360deg);
+  }
+}
+
+.animate-first {
+  animation: first 60s ease-in-out infinite;
+}
+
+.animate-second {
+  animation: second 80s ease-in-out infinite;
+}
+
+.animate-third {
+  animation: third 100s ease-in-out infinite;
+}
+
+.animate-fourth {
+  animation: fourth 70s ease-in-out infinite;
+}
+
+.animate-fifth {
+  animation: fifth 90s ease-in-out infinite;
 }

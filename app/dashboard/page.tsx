@@ -32,6 +32,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { supabase } from "@/lib/supabaseClient"
+import { DreamInterpretation } from "@/components/dream-interpretation"
 
 const moodColors = {
   Peaceful: "bg-blue-500/20 text-blue-300",
@@ -53,6 +54,7 @@ export default function DashboardPage() {
   const [horoscopeData, setHoroscopeData] = useState<{ horoscope: string; luckyElement: string; dreamFocus: string } | null>(null)
   const [refreshingHoroscope, setRefreshingHoroscope] = useState(false)
   const [deletingDreams, setDeletingDreams] = useState<Set<string>>(new Set())
+  const [isSaving, setIsSaving] = useState(false)
 
   const zodiacSigns: Record<string, string> = {
     "Aries": "♈",
@@ -153,6 +155,24 @@ export default function DashboardPage() {
       return
     }
 
+    if (dream.trim().length < 100) {
+      toast({
+        title: "Dream too short",
+        description: "Please provide at least 100 characters for a detailed interpretation",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (dream.trim().length > 500) {
+      toast({
+        title: "Dream too long",
+        description: "Please keep your dream description under 500 characters",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsAnalyzing(true)
 
     try {
@@ -176,46 +196,93 @@ export default function DashboardPage() {
         throw new Error(errorData.error || "Failed to get interpretation")
       }
 
-      const reader = response.body?.getReader()
-      const decoder = new TextDecoder()
+      // Simple approach: read the response as text
       let fullResponse = ""
 
-      if (reader) {
+      if (response.body) {
+        const reader = response.body.getReader()
+        const decoder = new TextDecoder()
+
         while (true) {
           const { done, value } = await reader.read()
           if (done) break
+          
+          const chunk = decoder.decode(value, { stream: true })
+          console.log("Raw chunk:", chunk)
+          fullResponse += chunk
+        }
+      }
 
-          const chunk = decoder.decode(value)
-          const lines = chunk.split("\n")
+      console.log("Complete response:", fullResponse)
 
-          for (const line of lines) {
-            if (line.startsWith("0:")) {
-              try {
-                const data = JSON.parse(line.slice(2))
-                if (data.content) {
-                  fullResponse += data.content
-                }
-              } catch (e) {
-                // Ignore parsing errors for streaming data
+      // Parse out just the content from the AI SDK format
+      let parsedContent = ""
+      const lines = fullResponse.split('\n')
+      
+      for (const line of lines) {
+        if (line.trim()) {
+          try {
+            // Handle AI SDK streaming format - lines like 0:"text content"
+            if (line.startsWith('0:')) {
+              const jsonContent = line.slice(2) // Remove "0:" prefix
+              const data = JSON.parse(jsonContent)
+              if (typeof data === 'string') {
+                parsedContent += data
+              } else if (data.content) {
+                parsedContent += data.content
               }
             }
+          } catch (e) {
+            // Skip parsing errors
+            console.log("Parsing error for line:", line, e)
           }
         }
       }
 
-      if (fullResponse) {
+      console.log("Parsed content:", parsedContent)
+
+      if (parsedContent.trim()) {
+        console.log("Setting interpretation state with parsed content...")
+        
+        // Clean up content - remove any AI references
+        const cleanedContent = parsedContent.trim()
+          .replace(/\bAI\b/g, '') // Remove standalone "AI" words
+          .replace(/artificial intelligence/gi, '') // Remove "artificial intelligence"
+          .replace(/\s+/g, ' ') // Clean up extra spaces
+          .trim()
+        
         setInterpretation({
-          title: "AI Dream Interpretation",
-          summary: fullResponse,
-          symbols: extractSymbols(fullResponse),
-          emotions: extractEmotions(fullResponse),
-          actions: extractActions(fullResponse),
+          title: "Dream Interpretation",
+          content: cleanedContent,
         })
+        console.log("Interpretation state set successfully!")
 
         toast({
           title: "Dream Interpreted! ✨",
           description: "Your dream analysis is ready below.",
         })
+      } else {
+        console.log("No parsable content found. Raw response:", fullResponse)
+        // Fallback: use raw response if no parsed content
+        if (fullResponse.trim()) {
+          // Clean raw response too
+          const cleanedRaw = fullResponse.trim()
+            .replace(/\bAI\b/g, '')
+            .replace(/artificial intelligence/gi, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+            
+          setInterpretation({
+            title: "Dream Interpretation",
+            content: cleanedRaw,
+          })
+          toast({
+            title: "Dream Interpreted! ✨",
+            description: "Your dream analysis is ready below.",
+          })
+        } else {
+          throw new Error("No content received")
+        }
       }
     } catch (error) {
       console.error("Error analyzing dream:", error)
@@ -230,55 +297,7 @@ export default function DashboardPage() {
     }
   }
 
-  // Helper functions to extract structured data from AI response
-  const extractSymbols = (content: string) => {
-    const symbolKeywords = [
-      "water",
-      "flying",
-      "animals",
-      "light",
-      "darkness",
-      "house",
-      "car",
-      "people",
-      "death",
-      "birth",
-    ]
-    const foundSymbols = symbolKeywords
-      .filter((symbol) => content.toLowerCase().includes(symbol))
-      .map((symbol) => `${symbol.charAt(0).toUpperCase() + symbol.slice(1)} - Symbolic meaning`)
 
-    return foundSymbols.length > 0 ? foundSymbols : ["Symbolic elements detected in your dream"]
-  }
-
-  const extractEmotions = (content: string) => {
-    const emotionKeywords = [
-      "fear",
-      "joy",
-      "anxiety",
-      "peace",
-      "love",
-      "anger",
-      "hope",
-      "curiosity",
-      "sadness",
-      "excitement",
-    ]
-    const foundEmotions = emotionKeywords
-      .filter((emotion) => content.toLowerCase().includes(emotion))
-      .map((emotion) => emotion.charAt(0).toUpperCase() + emotion.slice(1))
-
-    return foundEmotions.length > 0 ? foundEmotions : ["Emotional themes", "Subconscious feelings"]
-  }
-
-  const extractActions = (content: string) => {
-    return [
-      "Reflect on the themes presented in your dream",
-      "Consider how these symbols relate to your current life",
-      "Journal about your emotional responses to this dream",
-      "Practice mindfulness to connect with your subconscious",
-    ]
-  }
 
   const getGreeting = () => {
     const hour = new Date().getHours()
@@ -338,6 +357,178 @@ export default function DashboardPage() {
       })
     } finally {
       setRefreshingHoroscope(false)
+    }
+  }
+
+  const saveDreamToJournal = async () => {
+    if (!dream.trim() || !interpretation) {
+      toast({
+        title: "Nothing to save",
+        description: "Please enter a dream and get an interpretation first.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      const user = (await supabase.auth.getUser()).data.user
+      if (!user) {
+        toast({
+          title: "Please sign in",
+          description: "You need to be signed in to save dreams.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      // Extract symbols from the interpretation
+      const extractSymbols = (content: string): string[] => {
+        const symbols: string[] = []
+        // Look for section headers that might be symbols
+        const sections = content.split(/\*\*(.+?)\*\*/g)
+        for (let i = 1; i < sections.length; i += 2) {
+          const header = sections[i]
+          if (header && 
+              !header.toLowerCase().includes('actionable') &&
+              !header.toLowerCase().includes('emotional') &&
+              !header.toLowerCase().includes('summary') &&
+              !header.toLowerCase().includes('action') &&
+              !header.toLowerCase().includes('tone') &&
+              header.length < 50) {
+            symbols.push(header.trim())
+          }
+        }
+        return symbols.slice(0, 5) // Limit to 5 symbols
+      }
+
+      // Generate a title from the first few words of the dream
+      const generateTitle = (dreamText: string): string => {
+        const words = dreamText.trim().split(' ').slice(0, 6)
+        let title = words.join(' ')
+        if (title.length > 40) {
+          title = title.substring(0, 37) + '...'
+        }
+        return title || 'Dream Entry'
+      }
+
+      const symbols = extractSymbols(interpretation.content)
+      const title = generateTitle(dream)
+      
+      // Save the dream to the database
+      console.log('Attempting to save dream with data:', {
+        user_id: user.id,
+        title: title,
+        description: dream.trim(),
+        interpretation: interpretation.content.substring(0, 100) + '...', // First 100 chars for log
+        date: new Date().toISOString().split('T')[0],
+        mood: 'Reflective',
+        symbols: symbols,
+        intensity: 'Medium',
+        duration: 'Unknown',
+        lucidity: false
+      })
+
+      // Try the full insert first
+      let { data, error } = await supabase
+        .from('dreams')
+        .insert([
+          {
+            user_id: user.id,
+            title: title,
+            description: dream.trim(),
+            interpretation: interpretation.content,
+            date: new Date().toLocaleDateString('en-CA'), // Today's date in YYYY-MM-DD format
+            mood: 'Reflective', // Default mood, could be enhanced later
+            symbols: symbols,
+            intensity: 'Medium', // Default intensity
+            duration: 'Unknown', // Default duration
+            lucidity: false, // Default to non-lucid
+            created_at: new Date().toISOString()
+          }
+        ])
+        .select()
+
+      console.log('Save result:', { data, error })
+
+      // If that fails, try a simpler version with only essential fields (but still include interpretation)
+      if (error) {
+        console.warn('Full insert failed, trying simplified version...', error)
+        
+        const simpleInsert = await supabase
+          .from('dreams')
+          .insert([
+            {
+              user_id: user.id,
+              title: title,
+              description: dream.trim(),
+              interpretation: interpretation.content,
+              date: new Date().toLocaleDateString('en-CA'),
+              mood: 'Reflective',
+              symbols: symbols
+            }
+          ])
+          .select()
+        
+        data = simpleInsert.data
+        error = simpleInsert.error
+        
+        console.log('Simple insert result:', { data, error })
+      }
+
+      if (error) {
+        console.error('Supabase error details:', error)
+        throw new Error(`Database error: ${error.message || error.code || JSON.stringify(error)}`)
+      }
+
+      // Update recent dreams list
+      const { data: updatedDreams } = await supabase
+        .from('dreams')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false })
+        .limit(3)
+      
+      setRecentDreams(updatedDreams || [])
+
+      // Update dream stats
+      const { data: allDreams } = await supabase
+        .from('dreams')
+        .select('mood,symbols,date')
+        .eq('user_id', user.id)
+      
+      if (allDreams) {
+        const total = allDreams.length
+        const month = allDreams.filter(d => new Date(d.date).getMonth() === new Date().getMonth()).length
+        const moodCounts: Record<string, number> = {}
+        const symbolCounts: Record<string, number> = {}
+        allDreams.forEach(d => {
+          if (d.mood) moodCounts[d.mood] = (moodCounts[d.mood] || 0) + 1
+          if (d.symbols) d.symbols.forEach((s: string) => symbolCounts[s] = (symbolCounts[s] || 0) + 1)
+        })
+        const topMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
+        const rawTopSymbol = Object.entries(symbolCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
+        const topSymbol = rawTopSymbol.split(' ').slice(0, 2).join(' ')
+        setDreamStats({ total, month, topMood, topSymbol })
+      }
+
+      // Clear the current dream and interpretation
+      setDream('')
+      setInterpretation(null)
+
+      toast({
+        title: "Dream saved! ✨",
+        description: `"${title}" has been added to your dream journal.`,
+      })
+    } catch (error) {
+      console.error('Error saving dream:', error)
+      toast({
+        title: "Failed to save dream",
+        description: "Please try again in a moment.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -423,38 +614,88 @@ export default function DashboardPage() {
 
           {/* Quick Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <GlassCard className="text-center p-3 sm:p-6">
-              <BookOpen className="h-6 w-6 text-purple-400 mx-auto mb-2" />
-              <p className="text-3xl font-bold">{dreamStats.total}</p>
-              <p className="text-base text-gray-400">Total Dreams</p>
-              <div className="flex items-center justify-center mt-1 text-center">
-                <TrendingUp className="h-3 w-3 text-green-400 mr-1" />
-                <span className="text-xs md:text-sm text-green-400">+{dreamStats.month} this week</span>
+            <GlassCard className="text-center p-3 sm:p-4 md:p-6 min-h-[120px] sm:min-h-[140px] flex flex-col justify-between">
+              <div className="flex-1 flex flex-col items-center">
+                <BookOpen className="h-6 w-6 sm:h-6 sm:w-6 text-purple-400 mx-auto mb-2 flex-shrink-0" />
+                <p className="text-3xl sm:text-3xl font-bold leading-none mb-1">{dreamStats.total}</p>
+                <p className="text-base sm:text-base text-gray-400 leading-tight">Total Dreams</p>
+              </div>
+              <div className="flex items-center justify-center mt-2 flex-shrink-0">
+                <TrendingUp className="h-3 w-3 text-green-400 mr-1 flex-shrink-0" />
+                <span className="text-sm sm:text-xs text-green-400 leading-none">+1 this week</span>
               </div>
             </GlassCard>
 
-            <GlassCard className="text-center p-3 sm:p-6">
-              <Calendar className="h-6 w-6 text-blue-400 mx-auto mb-2" />
-              <p className="text-3xl font-bold">{dreamStats.month}</p>
-              <p className="text-base text-gray-400">This Month</p>
-              <div className="flex items-center justify-center mt-1 text-center">
-                <TrendingUp className="h-3 w-3 text-green-400 mr-1" />
-                <span className="text-xs md:text-sm text-green-400">+{dreamStats.month}%</span>
+            <GlassCard className="text-center p-3 sm:p-4 md:p-6 min-h-[120px] sm:min-h-[140px] flex flex-col justify-between">
+              <div className="flex-1 flex flex-col items-center">
+                <Calendar className="h-6 w-6 sm:h-6 sm:w-6 text-blue-400 mx-auto mb-2 flex-shrink-0" />
+                <p className="text-3xl sm:text-3xl font-bold leading-none mb-1">{dreamStats.month}</p>
+                <p className="text-base sm:text-base text-gray-400 leading-tight">This Month</p>
+              </div>
+              <div className="flex items-center justify-center mt-2 flex-shrink-0">
+                <TrendingUp className="h-3 w-3 text-green-400 mr-1 flex-shrink-0" />
+                <span className="text-sm sm:text-xs text-green-400 leading-none">+1%</span>
               </div>
             </GlassCard>
 
-            <GlassCard className="text-center p-3 sm:p-6">
-              <Heart className="h-6 w-6 text-pink-400 mx-auto mb-2" />
-              <p className="text-3xl font-bold">{dreamStats.topMood}</p>
-              <p className="text-base text-gray-400">Top Mood</p>
-              <Badge className="mt-1 bg-blue-500/20 text-blue-300 text-xs">35%</Badge>
+            <GlassCard className="text-center p-3 sm:p-4 md:p-6 min-h-[120px] sm:min-h-[140px] flex flex-col justify-between">
+              <div className="flex-1 flex flex-col items-center">
+                <Heart className="h-6 w-6 sm:h-6 sm:w-6 text-pink-400 mx-auto mb-2 flex-shrink-0" />
+                <p className="text-2xl sm:text-2xl md:text-3xl font-bold leading-none mb-1 truncate w-full px-1" title={dreamStats.topMood || 'Peace'}>
+                  {dreamStats.topMood || 'Peace'}
+                </p>
+                <p className="text-base sm:text-base text-gray-400 leading-tight">Top Mood</p>
+              </div>
+              <div className="flex justify-center mt-2 flex-shrink-0">
+                <Badge className="bg-blue-500/20 text-blue-300 text-sm sm:text-xs px-2 py-1">35%</Badge>
+              </div>
             </GlassCard>
 
-            <GlassCard className="text-center p-3 sm:p-6">
-              <Zap className="h-6 w-6 text-yellow-400 mx-auto mb-2" />
-              <p className="text-3xl font-bold">{dreamStats.topSymbol}</p>
-              <p className="text-base text-gray-400">Top Symbol</p>
-              <Badge className="mt-1 bg-yellow-500/20 text-yellow-300 text-xs">44%</Badge>
+            <GlassCard className="text-center p-3 sm:p-4 md:p-6 min-h-[120px] sm:min-h-[140px] flex flex-col justify-between">
+              <div className="flex-1 flex flex-col items-center">
+                <Zap className="h-6 w-6 sm:h-6 sm:w-6 text-yellow-400 mx-auto mb-2 flex-shrink-0" />
+                <p className="text-lg sm:text-lg md:text-xl lg:text-2xl font-bold leading-tight mb-1 break-words hyphens-auto px-1 max-w-full" 
+                   style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
+                   title={dreamStats.topSymbol ? dreamStats.topSymbol : 'Skyscraper: Ambition'}>
+                  {dreamStats.topSymbol ? (
+                    (() => {
+                      const symbolText = dreamStats.topSymbol
+                      const hasColon = symbolText.includes(':')
+                      
+                      if (hasColon) {
+                        const [firstPart, ...restParts] = symbolText.split(':')
+                        return (
+                          <>
+                            <span className="block leading-tight">{firstPart.trim()}:</span>
+                            <span className="block text-base sm:text-base leading-tight">{restParts.join(':').trim()}</span>
+                          </>
+                        )
+                      } else {
+                        const words = symbolText.split(' ')
+                        if (words.length > 1) {
+                          return (
+                            <>
+                              <span className="block leading-tight">{words[0]}:</span>
+                              <span className="block text-base sm:text-base leading-tight">{words.slice(1).join(' ')}</span>
+                            </>
+                          )
+                        } else {
+                          return <span className="block leading-tight">{symbolText}</span>
+                        }
+                      }
+                    })()
+                  ) : (
+                    <>
+                      <span className="block leading-tight">Skyscraper:</span>
+                      <span className="block text-base sm:text-base leading-tight">Ambition</span>
+                    </>
+                  )}
+                </p>
+                <p className="text-base sm:text-base text-gray-400 leading-tight">Top Symbol</p>
+              </div>
+              <div className="flex justify-center mt-2 flex-shrink-0">
+                <Badge className="bg-yellow-500/20 text-yellow-300 text-sm sm:text-xs px-2 py-1">44%</Badge>
+              </div>
             </GlassCard>
           </div>
 
@@ -469,18 +710,31 @@ export default function DashboardPage() {
                   Share Your Dream
                 </h2>
                 <Textarea
-                  placeholder="Describe your dream in detail... What did you see, feel, or experience?"
+                  placeholder="Describe your dream in detail... What did you see, feel, or experience? Please provide at least 100 characters for a meaningful interpretation."
                   value={dream}
-                  onChange={(e) => setDream(e.target.value)}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 500) {
+                      setDream(e.target.value)
+                    }
+                  }}
+                  maxLength={500}
                   className="min-h-24 sm:min-h-32 bg-white/5 border-white/10 resize-none"
                 />
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-4 gap-2 sm:gap-0">
-                  <p className="text-base text-gray-400">{dream.length}/500 characters</p>
+                  <p className={`text-base ${
+                    dream.length < 100 
+                      ? 'text-red-400' 
+                      : dream.length >= 450 
+                        ? 'text-yellow-400' 
+                        : 'text-gray-400'
+                  }`}>
+                    {dream.length}/500 characters {dream.length < 100 ? `(${100 - dream.length} more needed)` : ''}
+                  </p>
                   <Button
                     size="sm"
                     onClick={analyzeDream}
-                    disabled={isAnalyzing}
-                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 w-full sm:w-auto"
+                    disabled={isAnalyzing || dream.trim().length < 100}
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isAnalyzing ? (
                       <>
@@ -497,62 +751,63 @@ export default function DashboardPage() {
                 </div>
               </GlassCard>
 
+
+
               {/* Interpretation Results */}
-              {interpretation && (
-                <GlassCard glow className="p-4 sm:p-6">
-                  <h2 className="text-2xl font-semibold mb-4 text-purple-300">{interpretation.title}</h2>
+              {interpretation && (() => {
+                const content = interpretation.content;
+                const sections = content.split(/\*\*(.+?)\*\*/g);
 
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-lg font-medium mb-2">Dream Summary</h3>
-                      <p className="text-base text-gray-300 whitespace-pre-wrap">{interpretation.summary}</p>
-                    </div>
-
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div>
-                        <h3 className="text-lg font-medium mb-2">Key Symbols</h3>
-                        <ul className="space-y-1">
-                          {interpretation.symbols.map((symbol: string, index: number) => (
-                            <li key={index} className="text-gray-300 text-base">
-                              • {symbol}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      <div>
-                        <h3 className="text-lg font-medium mb-2">Emotions Detected</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {interpretation.emotions.map((emotion: string, index: number) => (
-                            <Badge key={index} variant="secondary" className="bg-purple-500/20">
-                              {emotion}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row gap-2 pt-4">
+                return (
+                  <GlassCard glow className="p-4 sm:p-6">
+                    <DreamInterpretation 
+                      title={interpretation.title}
+                      content={content}
+                      showTitle={true}
+                    />
+                    
+                    <div className="flex flex-col sm:flex-row gap-3 pt-6 mt-6 border-t border-white/10">
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => navigateToPage("/journal")}
-                        className="w-full sm:w-auto"
+                        onClick={saveDreamToJournal}
+                        disabled={isSaving}
+                        className="w-full sm:w-auto bg-green-500/10 hover:bg-green-500/20 border-green-500/30 text-green-300 hover:text-green-200 disabled:opacity-50"
                       >
-                        Save to Journal
+                        {isSaving ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-300 mr-2"></div>
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <BookOpen className="h-4 w-4 mr-2" />
+                            Save to Journal
+                          </>
+                        )}
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => navigateToPage("/readings")}
-                        className="w-full sm:w-auto"
+                        className="w-full sm:w-auto bg-pink-500/10 hover:bg-pink-500/20 border-pink-500/30 text-pink-300 hover:text-pink-200"
                       >
+                        <Sparkles className="h-4 w-4 mr-2" />
                         Get Tarot Reading
                       </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => navigateToPage("/insights")}
+                        className="w-full sm:w-auto bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 text-blue-300 hover:text-blue-200"
+                      >
+                        <BarChart3 className="h-4 w-4 mr-2" />
+                        View Patterns
+                      </Button>
                     </div>
-                  </div>
-                </GlassCard>
-              )}
+                  </GlassCard>
+                );
+              })()}
 
               {/* Quick Actions */}
               <GlassCard className="p-4 sm:p-6">
