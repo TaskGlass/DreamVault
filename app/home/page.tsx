@@ -27,6 +27,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 import { BackgroundGradientAnimation } from "@/components/ui/background-gradient-animation"
 
@@ -197,12 +198,12 @@ export default function LandingPage() {
       }`}>
         <div className={`max-w-7xl mx-auto transition-all duration-500 ease-out relative ${
           scrolled 
-            ? 'bg-gradient-to-r from-purple-900/30 via-purple-800/20 to-purple-900/30 backdrop-blur-2xl border border-purple-500/20 rounded-2xl shadow-2xl shadow-purple-900/50 px-6' 
+            ? 'bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl shadow-black/20 px-6' 
             : 'bg-transparent border border-transparent px-4 sm:px-6 lg:px-8'
         }`}>
           {/* Glassmorphism overlay when scrolled */}
           {scrolled && (
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-transparent to-purple-500/5 rounded-2xl pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-transparent to-white/10 rounded-2xl pointer-events-none" />
           )}
           <div className="flex items-center justify-between h-16 relative z-10">
             {/* Logo */}
@@ -261,55 +262,62 @@ export default function LandingPage() {
 
             {/* Mobile Menu Button */}
             <div className="md:hidden">
-              <Button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className={`text-white p-2 ${
-                  scrolled 
-                    ? 'bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 rounded-xl' 
-                    : 'bg-white/10 hover:bg-white/20 rounded-lg border border-white/20'
-                }`}
-              >
-                {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-              </Button>
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    className={`text-white p-2 ${
+                      scrolled 
+                        ? 'bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 rounded-xl' 
+                        : 'bg-white/10 hover:bg-white/20 rounded-lg border border-white/20'
+                    }`}
+                    aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+                  >
+                    {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent
+                  side="top"
+                  className="rounded-b-2xl p-6 border border-white/10 bg-black/70 supports-[backdrop-filter]:bg-black/60 backdrop-blur-xl"
+                >
+                  <SheetTitle className="sr-only">Mobile menu</SheetTitle>
+                  <div className="space-y-4 mt-4">
+                    {navigationItems.map((item) => (
+                      <SheetClose asChild key={item.name}>
+                        <button
+                          onClick={() => scrollToSection(item.href)}
+                          className="w-full flex items-center px-4 py-3 rounded-xl transition-colors text-left text-white/90 hover:text-white hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50"
+                        >
+                          {item.name}
+                        </button>
+                      </SheetClose>
+                    ))}
+                    <div className="border-t border-white/10 pt-4">
+                      <div className="flex gap-2">
+                        <Link href="/sign-in" className="flex-1">
+                          <SheetClose asChild>
+                            <Button className="w-full bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white">
+                              Sign In
+                            </Button>
+                          </SheetClose>
+                        </Link>
+                        <Link href="/sign-up" className="flex-1">
+                          <SheetClose asChild>
+                            <Button className="w-full bg-purple-600 hover:bg-purple-700 rounded-xl text-white">
+                              Interpret Dream
+                            </Button>
+                          </SheetClose>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Mobile Navigation Menu */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-40 md:hidden">
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
-          <div className="fixed top-20 left-4 right-4 bg-gradient-to-b from-purple-900/95 to-purple-800/95 backdrop-blur-2xl border border-purple-500/20 rounded-2xl shadow-2xl shadow-purple-900/50 p-6">
-            <div className="space-y-4">
-              {navigationItems.map((item) => (
-                <button
-                  key={item.name}
-                  onClick={() => {
-                    scrollToSection(item.href);
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full flex items-center px-4 py-3 rounded-xl transition-all text-left text-white/80 hover:text-white hover:bg-white/10"
-                >
-                  {item.name}
-                </button>
-              ))}
-              <div className="border-t border-white/10 pt-4">
-                <Link href="/sign-in">
-                  <Button className="w-full bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white">
-                    Sign In
-                  </Button>
-                </Link>
-                <Link href="/sign-up" className="block mt-2">
-                  <Button className="w-full bg-purple-600 hover:bg-purple-700 rounded-xl text-white">
-                    Interpret Dream
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Mobile Navigation handled via Sheet above */}
 
       {/* Hero Section */}
       <section id="home" className="relative overflow-hidden pt-28 min-h-screen min-h-[100svh]">
@@ -685,7 +693,10 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <div key={index} className="glass-card rounded-2xl p-6 text-center hover:glow transition-all">
+              <div
+                key={index}
+                className="glass-card rounded-2xl p-6 text-center hover:glow transition-transform duration-300 ease-out transform hover:scale-[1.03] hover:-translate-y-1"
+              >
                 <feature.icon className="h-12 w-12 text-purple-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
                 <p className="text-gray-300">{feature.description}</p>
