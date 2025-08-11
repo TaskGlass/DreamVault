@@ -34,6 +34,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { supabase } from "@/lib/supabaseClient"
 import { DreamInterpretation } from "@/components/dream-interpretation"
+import { useInactivityTimeout } from "@/hooks/use-inactivity-timeout"
 
 const moodColors = {
   Peaceful: "bg-blue-500/20 text-blue-300",
@@ -56,6 +57,9 @@ export default function DashboardPage() {
   const [refreshingHoroscope, setRefreshingHoroscope] = useState(false)
   const [deletingDreams, setDeletingDreams] = useState<Set<string>>(new Set())
   const [isSaving, setIsSaving] = useState(false)
+
+  // Initialize inactivity timeout (3 minutes)
+  useInactivityTimeout(3)
 
   const zodiacSigns: Record<string, string> = {
     "Aries": "♈",

@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Calendar, Moon, TrendingUp, Heart, Eye, Clock, BarChart3 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabaseClient"
+import { useInactivityTimeout } from "@/hooks/use-inactivity-timeout"
 
 export default function TimelinePage() {
   const router = useRouter()
@@ -16,6 +17,9 @@ export default function TimelinePage() {
   const [selectedMood, setSelectedMood] = useState("all")
   const [timelineData, setTimelineData] = useState<any[]>([])
   const [weeklyStats, setWeeklyStats] = useState<any[]>([])
+
+  // Initialize inactivity timeout (3 minutes)
+  useInactivityTimeout(3)
 
   const moodColors = {
     Peaceful: "bg-blue-500/20 text-blue-300",

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Eye, Brain, TrendingUp, Star, Lightbulb } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabaseClient"
+import { useInactivityTimeout } from "@/hooks/use-inactivity-timeout"
 
 // Helper functions to generate meaningful analysis data
 const generateSymbolMeaning = (symbol: string): string => {

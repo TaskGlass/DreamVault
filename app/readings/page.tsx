@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Sparkles, Moon, Star, Shuffle, Eye, Heart, X } from "lucide-react"
 import { createPortal } from "react-dom"
 import { supabase } from "@/lib/supabaseClient"
+import { useInactivityTimeout } from "@/hooks/use-inactivity-timeout"
 
 const tarotCards = [
   { name: "The Fool", meaning: "New beginnings, innocence, spontaneity", image: "🃏" },
@@ -282,6 +283,9 @@ export default function ReadingsPage() {
   const horoscopeRef = useRef<HTMLDivElement>(null)
   const moonRef = useRef<HTMLDivElement>(null)
   const affirmationRef = useRef<HTMLDivElement>(null)
+
+  // Initialize inactivity timeout (3 minutes)
+  useInactivityTimeout(3)
 
   // Add this useEffect after the existing state declarations
   useEffect(() => {

@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, Lightbulb, Eye, Moon, Star, Clock, CheckCircle, Filter } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useInactivityTimeout } from "@/hooks/use-inactivity-timeout"
 
 const techniques = [
   {
@@ -128,6 +129,9 @@ export default function TechniquesPage() {
   const [selectedTechnique, setSelectedTechnique] = useState<any>(null)
   const [completedSteps, setCompletedSteps] = useState<{ [key: number]: number }>({})
   const [skillFilter, setSkillFilter] = useState("all")
+
+  // Initialize inactivity timeout (3 minutes)
+  useInactivityTimeout(3)
 
   const toggleStep = (techniqueId: number, stepIndex: number, event: React.MouseEvent) => {
     event.stopPropagation() // Prevent the card click event from firing

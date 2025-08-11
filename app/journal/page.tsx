@@ -12,6 +12,7 @@ import { BookOpen, Search, Filter, Plus, Calendar, Heart, Zap, Trash2, MoreVerti
 import { supabase } from "@/lib/supabaseClient"
 import { useToast } from "@/hooks/use-toast"
 import { DreamInterpretation } from "@/components/dream-interpretation"
+import { useInactivityTimeout } from "@/hooks/use-inactivity-timeout"
 
 const moodColors = {
   Peaceful: "bg-blue-500/20 text-blue-300",
@@ -28,6 +29,9 @@ export default function JournalPage() {
   const [dreamStats, setDreamStats] = useState({ total: 0, month: 0, topMood: '', topSymbol: '' })
   const [deletingDreams, setDeletingDreams] = useState<Set<string>>(new Set())
   const { toast } = useToast()
+
+  // Initialize inactivity timeout (3 minutes)
+  useInactivityTimeout(3)
 
   useEffect(() => {
     const fetchDreams = async () => {

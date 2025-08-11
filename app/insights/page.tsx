@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { BarChart3, TrendingUp, Calendar, Heart, Moon, Zap, Eye, Star } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabaseClient"
+import { useInactivityTimeout } from "@/hooks/use-inactivity-timeout"
 
 export default function InsightsPage() {
   const [timeRange, setTimeRange] = useState("month")
@@ -18,6 +19,9 @@ export default function InsightsPage() {
   const [symbolData, setSymbolData] = useState<any[]>([])
   const [weeklyData, setWeeklyData] = useState<any[]>([])
   const [stats, setStats] = useState({ total: 0, dominantMood: '', topSymbol: '', topSymbolPercentage: 0 })
+
+  // Initialize inactivity timeout (3 minutes)
+  useInactivityTimeout(3)
 
   useEffect(() => {
     const fetchDreams = async () => {

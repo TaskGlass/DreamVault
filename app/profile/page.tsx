@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch"
 import { User, Camera, Star, Crown, Zap, Settings, Bell, Moon, Heart, Calendar, LogOut } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/lib/supabaseClient"
+import { useInactivityTimeout } from "@/hooks/use-inactivity-timeout"
 
 const zodiacSigns = [
   { name: "Aries", symbol: "♈", dates: "Mar 21 - Apr 19" },
@@ -34,6 +35,9 @@ export default function ProfilePage() {
   const [currentPlan, setCurrentPlan] = useState<any>(null)
   const [isEditing, setIsEditing] = useState(false)
   const { toast } = useToast()
+
+  // Initialize inactivity timeout (3 minutes)
+  useInactivityTimeout(3)
 
   useEffect(() => {
     const fetchProfile = async () => {
