@@ -551,49 +551,89 @@ export default function LandingPage() {
               </TabsList>
 
               <TabsContent value="journal" className="space-y-6">
+                {/* Dream Input Section */}
+                <div className="glass-card rounded-xl p-6 mb-6">
+                  <h3 className="text-xl font-semibold mb-4 flex items-center">
+                    <Sparkles className="h-5 w-5 mr-2 text-purple-400" />
+                    Share Your Dream
+                  </h3>
+                  <div className="bg-white/5 border border-white/10 rounded-lg p-4 min-h-24">
+                    <p className="text-gray-400 text-sm italic">
+                      "I was flying over mountains, feeling completely free and peaceful. The sky was crystal clear and I could see for miles..."
+                    </p>
+                  </div>
+                  <div className="flex justify-between items-center mt-3">
+                    <span className="text-xs text-gray-500">100/500 characters</span>
+                    <Button size="sm" className="bg-purple-500/20 hover:bg-purple-500/30 border-purple-500/30 text-purple-300">
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Analyze Dream
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Recent Dreams Grid */}
                 <div className="grid md:grid-cols-2 gap-6 items-start">
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Recent Dreams</h3>
+                    <h3 className="text-lg font-semibold flex items-center">
+                      <BookOpen className="h-4 w-4 mr-2 text-purple-400" />
+                      Recent Dreams
+                    </h3>
                     {[
-                      { title: "Flying Over Mountains", mood: "Hopeful", date: "2 days ago" },
-                      { title: "Lost in a Forest", mood: "Anxious", date: "1 week ago" },
-                      { title: "Meeting an Old Friend", mood: "Nostalgic", date: "2 weeks ago" },
+                      { title: "Flying Over Mountains", mood: "Hopeful", date: "2 days ago", symbols: ["Flying", "Mountains"] },
+                      { title: "Lost in a Forest", mood: "Anxious", date: "1 week ago", symbols: ["Forest", "Lost"] },
+                      { title: "Meeting an Old Friend", mood: "Nostalgic", date: "2 weeks ago", symbols: ["Friend", "Memory"] },
                     ].map((dream, index) => (
                       <div key={index} className="glass-card rounded-xl p-4 max-w-md mx-auto md:mx-0">
                         <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-semibold">{dream.title}</h4>
-                          <Badge variant="outline" className="text-xs">
+                          <h4 className="font-semibold text-sm">{dream.title}</h4>
+                          <Badge variant="outline" className="text-xs bg-blue-500/20 border-blue-500/30 text-blue-300">
                             {dream.mood}
                           </Badge>
                         </div>
-                        <p className="text-sm text-gray-400">{dream.date}</p>
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {dream.symbols.map((symbol, i) => (
+                            <Badge key={i} variant="secondary" className="text-xs bg-purple-500/20 text-purple-300">
+                              {symbol}
+                            </Badge>
+                          ))}
+                        </div>
+                        <p className="text-xs text-gray-400">{dream.date}</p>
                       </div>
                     ))}
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Dream Analysis</h3>
+                    <h3 className="text-lg font-semibold flex items-center">
+                      <BarChart3 className="h-4 w-4 mr-2 text-blue-400" />
+                      Dream Analysis
+                    </h3>
                     <div className="glass-card rounded-xl p-6 max-w-md mx-auto md:mx-0">
                       <div className="space-y-4">
                         <div>
-                          <h4 className="font-medium mb-2">Key Symbols</h4>
+                          <h4 className="font-medium mb-2 text-purple-300">Key Symbols</h4>
                           <div className="flex flex-wrap gap-2">
                             {["Flying", "Water", "Freedom"].map((symbol, i) => (
-                              <Badge key={i} variant="secondary" className="bg-purple-500/20">
+                              <Badge key={i} variant="secondary" className="bg-purple-500/20 text-purple-300">
                                 {symbol}
                               </Badge>
                             ))}
                           </div>
                         </div>
                         <div>
-                          <h4 className="font-medium mb-2">Emotions</h4>
+                          <h4 className="font-medium mb-2 text-blue-300">Emotional Tones</h4>
                           <div className="flex flex-wrap gap-2">
                             {["Peace", "Joy", "Liberation"].map((emotion, i) => (
-                              <Badge key={i} variant="secondary" className="bg-blue-500/20">
+                              <Badge key={i} variant="secondary" className="bg-blue-500/20 text-blue-300">
                                 {emotion}
                               </Badge>
                             ))}
                           </div>
+                        </div>
+                        <div>
+                          <h4 className="font-medium mb-2 text-green-300">Summary</h4>
+                          <p className="text-sm text-gray-300 leading-relaxed">
+                            Your dream of flying represents a desire for freedom and transcendence. The mountains symbolize challenges you're overcoming, while the clear sky suggests clarity of vision.
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -602,32 +642,87 @@ export default function LandingPage() {
               </TabsContent>
 
               <TabsContent value="insights" className="space-y-6">
+                {/* Overview Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
-                    { icon: BookOpen, label: "Total Dreams", value: "23", color: "text-purple-400" },
-                    { icon: BarChart3, label: "This Month", value: "7", color: "text-blue-400" },
-                    { icon: Heart, label: "Top Mood", value: "Peaceful", color: "text-pink-400" },
-                    { icon: Zap, label: "Top Symbol", value: "Flying", color: "text-yellow-400" },
+                    { icon: BookOpen, label: "Total Dreams", value: "23", color: "text-purple-400", badge: "+3 this week" },
+                    { icon: BarChart3, label: "This Month", value: "7", color: "text-blue-400", badge: "+1% trend" },
+                    { icon: Heart, label: "Top Mood", value: "Peaceful", color: "text-pink-400", badge: "35%" },
+                    { icon: Zap, label: "Top Symbol", value: "Flying", color: "text-yellow-400", badge: "44%" },
                   ].map((stat, index) => (
-                    <div key={index} className="glass-card rounded-2xl p-6 text-center rounded-xl">
+                    <div key={index} className="glass-card rounded-2xl p-6 text-center">
                       <stat.icon className={`h-6 w-6 ${stat.color} mx-auto mb-2`} />
                       <p className="text-2xl font-bold">{stat.value}</p>
-                      <p className="text-sm text-gray-400">{stat.label}</p>
+                      <p className="text-sm text-gray-400 mb-2">{stat.label}</p>
+                      <Badge className={`text-xs px-2 py-1 ${
+                        stat.label === "Total Dreams" ? "bg-green-500/20 text-green-300" :
+                        stat.label === "This Month" ? "bg-green-500/20 text-green-300" :
+                        stat.label === "Top Mood" ? "bg-blue-500/20 text-blue-300" :
+                        "bg-yellow-500/20 text-yellow-300"
+                      }`}>
+                        {stat.badge}
+                      </Badge>
                     </div>
                   ))}
                 </div>
 
-                <div className="glass-card rounded-2xl p-6 p-6 rounded-xl">
-                  <h3 className="text-xl font-semibold mb-4">Emotional Patterns</h3>
+                {/* Key Insights */}
+                <div className="glass-card rounded-2xl p-6">
+                  <h3 className="text-xl font-semibold mb-4 flex items-center">
+                    <Sparkles className="h-5 w-5 mr-2 text-purple-400" />
+                    Key Insights
+                  </h3>
+                  <div className="space-y-4">
+                    <p className="text-gray-300 leading-relaxed">
+                      Your dream patterns reveal a rich tapestry of symbolic language with 23 unique symbols appearing across your dreams. The most frequent symbol "Flying" appears in 44% of your dreams, suggesting it holds particular significance for your subconscious mind.
+                    </p>
+                    <p className="text-gray-300 leading-relaxed">
+                      Your emotional landscape shows Peaceful as the predominant feeling, appearing in 35% of your dreams. This suggests your subconscious is processing inner peace and contentment that deserve your attention.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Symbol Analysis */}
+                <div className="glass-card rounded-2xl p-6">
+                  <h3 className="text-xl font-semibold mb-4 flex items-center">
+                    <Zap className="h-5 w-5 mr-2 text-yellow-400" />
+                    Symbol Analysis
+                  </h3>
+                  <div className="space-y-4">
+                    {[
+                      { symbol: "Flying", frequency: 10, percentage: 44, meaning: "Freedom and transcendence" },
+                      { symbol: "Water", frequency: 7, percentage: 30, meaning: "Emotional depth and intuition" },
+                      { symbol: "Mountains", frequency: 5, percentage: 22, meaning: "Challenges and growth" },
+                    ].map((symbol, index) => (
+                      <div key={index} className="border-l-4 border-purple-400 bg-purple-500/10 p-4 rounded-r-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-lg font-semibold text-purple-300">{symbol.symbol}</h4>
+                          <div className="flex items-center gap-3">
+                            <Badge className="bg-purple-500/20 text-purple-300 whitespace-nowrap">{symbol.frequency} times</Badge>
+                            <Badge className="bg-blue-500/20 text-blue-300 whitespace-nowrap">{symbol.percentage}%</Badge>
+                          </div>
+                        </div>
+                        <p className="text-gray-300 text-sm">{symbol.meaning}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Emotional Patterns */}
+                <div className="glass-card rounded-2xl p-6">
+                  <h3 className="text-xl font-semibold mb-4 flex items-center">
+                    <Heart className="h-5 w-5 mr-2 text-pink-400" />
+                    Emotional Patterns
+                  </h3>
                   <div className="space-y-3">
                     {[
-                      { mood: "Peaceful", percentage: 35, color: "bg-blue-500" },
-                      { mood: "Curious", percentage: 24, color: "bg-green-500" },
-                      { mood: "Hopeful", percentage: 18, color: "bg-purple-500" },
+                      { mood: "Peaceful", percentage: 35, color: "bg-blue-500", description: "Inner calm and contentment" },
+                      { mood: "Curious", percentage: 24, color: "bg-green-500", description: "Exploration and learning" },
+                      { mood: "Hopeful", percentage: 18, color: "bg-purple-500", description: "Optimism and faith" },
                     ].map((mood, index) => (
-                      <div key={index} className="space-y-1">
-                        <div className="flex justify-between">
-                          <span>{mood.mood}</span>
+                      <div key={index} className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium">{mood.mood}</span>
                           <span className="text-sm text-gray-400">{mood.percentage}%</span>
                         </div>
                         <div className="w-full bg-white/5 rounded-full h-2">
@@ -636,6 +731,7 @@ export default function LandingPage() {
                             style={{ width: `${mood.percentage}%` }}
                           />
                         </div>
+                        <p className="text-xs text-gray-400">{mood.description}</p>
                       </div>
                     ))}
                   </div>
@@ -643,37 +739,70 @@ export default function LandingPage() {
               </TabsContent>
 
               <TabsContent value="readings" className="space-y-6">
+                {/* Reading Options */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
-                    { icon: Shuffle, title: "Draw Cards", subtitle: "3-Card Spread", color: "text-purple-400" },
-                    { icon: Star, title: "Horoscope", subtitle: "Daily Reading", color: "text-yellow-400" },
-                    { icon: Moon, title: "Moon Phase", subtitle: "Current Energy", color: "text-blue-400" },
-                    { icon: Eye, title: "Affirmation", subtitle: "Daily Wisdom", color: "text-green-400" },
+                    { icon: Shuffle, title: "Draw Cards", subtitle: "3-Card Spread", color: "text-purple-400", description: "Get guidance from the tarot" },
+                    { icon: Star, title: "Horoscope", subtitle: "Daily Reading", color: "text-yellow-400", description: "Your zodiac insights" },
+                    { icon: Moon, title: "Moon Phase", subtitle: "Current Energy", color: "text-blue-400", description: "Lunar influence today" },
+                    { icon: Eye, title: "Affirmation", subtitle: "Daily Wisdom", color: "text-green-400", description: "Positive reinforcement" },
                   ].map((item, index) => (
                     <div
                       key={index}
-                      className="glass-card rounded-2xl p-6 text-center cursor-pointer hover:glow transition-all rounded-xl"
+                      className="glass-card rounded-2xl p-6 text-center cursor-pointer hover:glow transition-all hover:scale-105"
                     >
-                      <item.icon className={`h-8 w-8 ${item.color} mx-auto mb-2`} />
-                      <p className="font-medium">{item.title}</p>
-                      <p className="text-xs text-gray-400">{item.subtitle}</p>
+                      <item.icon className={`h-8 w-8 ${item.color} mx-auto mb-3`} />
+                      <p className="font-medium text-lg mb-1">{item.title}</p>
+                      <p className="text-sm text-gray-400 mb-2">{item.subtitle}</p>
+                      <p className="text-xs text-gray-500">{item.description}</p>
                     </div>
                   ))}
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-4">
-                  {[
-                    { name: "The Fool", meaning: "New beginnings", image: "🃏", position: "Past" },
-                    { name: "The Magician", meaning: "Manifestation", image: "🎩", position: "Present" },
-                    { name: "The Star", meaning: "Hope & guidance", image: "⭐", position: "Future" },
-                  ].map((card, index) => (
-                    <div key={index} className="glass-card rounded-2xl p-6 text-center glow rounded-xl">
-                      <div className="text-4xl mb-3">{card.image}</div>
-                      <h3 className="font-semibold text-purple-300 mb-2">{card.name}</h3>
-                      <p className="text-sm text-gray-300 mb-3">{card.meaning}</p>
-                      <Badge className="bg-purple-500/20">{card.position}</Badge>
+                {/* Sample Tarot Reading */}
+                <div className="glass-card rounded-2xl p-6">
+                  <h3 className="text-xl font-semibold mb-4 flex items-center">
+                    <Shuffle className="h-5 w-5 mr-2 text-purple-400" />
+                    Sample Tarot Reading
+                  </h3>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    {[
+                      { name: "The Fool", meaning: "New beginnings and fresh starts", image: "🃏", position: "Past", description: "Represents innocence and taking leaps of faith" },
+                      { name: "The Magician", meaning: "Manifestation and power", image: "🎩", position: "Present", description: "You have all the tools you need" },
+                      { name: "The Star", meaning: "Hope and guidance", image: "⭐", position: "Future", description: "Light at the end of the tunnel" },
+                    ].map((card, index) => (
+                      <div key={index} className="glass-card rounded-xl p-4 text-center glow border border-purple-500/20">
+                        <div className="text-4xl mb-3">{card.image}</div>
+                        <h3 className="font-semibold text-purple-300 mb-2">{card.name}</h3>
+                        <p className="text-sm text-gray-300 mb-2">{card.meaning}</p>
+                        <p className="text-xs text-gray-400 mb-3">{card.description}</p>
+                        <Badge className="bg-purple-500/20 text-purple-300">{card.position}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Daily Horoscope Preview */}
+                <div className="glass-card rounded-2xl p-6">
+                  <h3 className="text-xl font-semibold mb-4 flex items-center">
+                    <Star className="h-5 w-5 mr-2 text-yellow-400" />
+                    Daily Horoscope Preview
+                  </h3>
+                  <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center">
+                        <span className="text-2xl mr-3">♌</span>
+                        <div>
+                          <h4 className="font-semibold text-yellow-300">Leo</h4>
+                          <p className="text-sm text-gray-400">July 23 - August 22</p>
+                        </div>
+                      </div>
+                      <Badge className="bg-yellow-500/20 text-yellow-300">Today</Badge>
                     </div>
-                  ))}
+                    <p className="text-gray-300 text-sm leading-relaxed">
+                      Your natural leadership qualities are shining brightly today. The stars align to bring opportunities for creative expression and meaningful connections. Trust your intuition and embrace the spotlight - it's your time to shine!
+                    </p>
+                  </div>
                 </div>
               </TabsContent>
             </Tabs>
