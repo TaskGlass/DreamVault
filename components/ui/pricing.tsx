@@ -37,8 +37,8 @@ const dreamVaultPlans: Plan[] = [
   },
   {
     name: "Lucid Explorer",
-    monthlyPrice: "$9/month",
-    annualPrice: "$5/month",
+    monthlyPrice: "$9",
+    annualPrice: "$5",
     annualDisplay: "$60/year",
     annualSavings: "Save $48/year",
     icon: Zap,
@@ -54,8 +54,8 @@ const dreamVaultPlans: Plan[] = [
   },
   {
     name: "Astral Voyager",
-    monthlyPrice: "$19/month",
-    annualPrice: "$9/month",
+    monthlyPrice: "$19",
+    annualPrice: "$9",
     annualDisplay: "$108/year",
     annualSavings: "Save $120/year",
     icon: Crown,

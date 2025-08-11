@@ -24,6 +24,9 @@ import {
   Shuffle,
   Menu,
   X,
+  Shield,
+  TrendingUp,
+  Users,
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -35,6 +38,9 @@ const navigationItems = [
   { name: "Home", href: "#home" },
   { name: "Preview", href: "#preview" },
   { name: "Features", href: "#features" },
+  { name: "How It Works", href: "#how-it-works" },
+  { name: "Benefits", href: "#benefits" },
+  { name: "Testimonials", href: "#testimonials" },
   { name: "Pricing", href: "#pricing" },
 ]
 
@@ -835,6 +841,207 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* How It Works Section */}
+      <section id="how-it-works" className="py-16 bg-gradient-to-b from-transparent to-black/20">
+        <div className="max-w-md md:max-w-7xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-glow mb-4">How DreamVault Works</h2>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              Your journey to dream understanding in three simple steps
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                step: "01",
+                title: "Record Your Dream",
+                description: "Share your dream in detail through our intuitive interface. Our AI analyzes every element to provide comprehensive insights.",
+                icon: BookOpen,
+                color: "text-purple-400"
+              },
+              {
+                step: "02",
+                title: "AI Interpretation",
+                description: "Advanced AI processes your dream content, identifying symbols, emotions, and patterns to reveal hidden meanings.",
+                icon: Sparkles,
+                color: "text-blue-400"
+              },
+              {
+                step: "03",
+                title: "Discover Insights",
+                description: "Gain deep understanding of your subconscious through detailed analysis, pattern recognition, and personalized guidance.",
+                icon: BarChart3,
+                color: "text-green-400"
+              }
+            ].map((item, index) => (
+              <div key={index} className="relative">
+                <div className="glass-card rounded-2xl p-8 text-center h-full">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                    <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white text-2xl font-bold w-16 h-16 rounded-full flex items-center justify-center">
+                      {item.step}
+                    </div>
+                  </div>
+                  <div className="mt-8">
+                    <item.icon className={`h-16 w-16 ${item.color} mx-auto mb-6`} />
+                    <h3 className="text-2xl font-semibold mb-4">{item.title}</h3>
+                    <p className="text-gray-300 leading-relaxed">{item.description}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Benefits Section */}
+      <section id="benefits" className="py-16">
+        <div className="max-w-md md:max-w-7xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-glow mb-4">Why Choose DreamVault?</h2>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              Experience the most advanced dream analysis platform available
+            </p>
+          </div>
+          
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              {[
+                {
+                  icon: Zap,
+                  title: "AI-Powered Analysis",
+                  description: "Our advanced AI technology provides deeper, more accurate dream interpretations than traditional methods."
+                },
+                {
+                  icon: Shield,
+                  title: "Privacy First",
+                  description: "Your dreams are completely private and secure. We use enterprise-grade encryption to protect your personal data."
+                },
+                {
+                  icon: TrendingUp,
+                  title: "Pattern Recognition",
+                  description: "Discover recurring themes and emotional patterns across your dreams for deeper self-understanding."
+                },
+                {
+                  icon: Users,
+                  title: "Community Support",
+                  description: "Join a community of dreamers and spiritual seekers on similar journeys of self-discovery."
+                }
+              ].map((benefit, index) => (
+                <div key={index} className="flex items-start gap-4">
+                  <div className="bg-purple-500/20 p-3 rounded-lg flex-shrink-0">
+                    <benefit.icon className="h-6 w-6 text-purple-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">{benefit.title}</h3>
+                    <p className="text-gray-300">{benefit.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="glass-card rounded-2xl p-8">
+              <h3 className="text-2xl font-semibold mb-6 text-center">Trusted by Dreamers Worldwide</h3>
+              <div className="space-y-6">
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-purple-400 mb-2">500+</div>
+                  <div className="text-gray-400">Active Users</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-blue-400 mb-2">2,500+</div>
+                  <div className="text-gray-400">Dreams Analyzed</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-green-400 mb-2">98%</div>
+                  <div className="text-gray-400">User Satisfaction</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section id="testimonials" className="py-16 bg-gradient-to-b from-black/20 to-transparent">
+        <div className="max-w-md md:max-w-7xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-glow mb-4">What Our Users Say</h2>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              Real experiences from the DreamVault community
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                quote: "DreamVault helped me understand recurring dreams I've had for years. The AI analysis is incredibly accurate and insightful.",
+                author: "Sarah M.",
+                role: "Dream Explorer",
+                rating: 5
+              },
+              {
+                quote: "The pattern recognition feature revealed emotional themes I never noticed. It's like having a personal dream therapist.",
+                author: "Michael R.",
+                role: "Spiritual Seeker",
+                rating: 5
+              },
+              {
+                quote: "I love how easy it is to record dreams and get instant interpretations. The insights have been life-changing.",
+                author: "Emma L.",
+                role: "Dream Journaler",
+                rating: 5
+              }
+            ].map((testimonial, index) => (
+              <div key={index} className="glass-card rounded-2xl p-6">
+                <div className="flex mb-4">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                  ))}
+                </div>
+                <blockquote className="text-gray-300 mb-4 italic">
+                  "{testimonial.quote}"
+                </blockquote>
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold mr-3">
+                    {testimonial.author.charAt(0)}
+                  </div>
+                  <div>
+                    <div className="font-semibold">{testimonial.author}</div>
+                    <div className="text-sm text-gray-400">{testimonial.role}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16">
+        <div className="max-w-md md:max-w-4xl mx-auto px-4 text-center">
+          <div className="glass-card rounded-2xl p-12">
+            <h2 className="text-4xl font-bold text-glow mb-4">Ready to Unlock Your Dreams?</h2>
+            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+              Join thousands of dreamers who are discovering the hidden messages in their subconscious mind. Start your journey today with our free plan.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/sign-up">
+                <Button size="lg" className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-lg px-8 py-4">
+                  <Sparkles className="h-5 w-5 mr-2" />
+                  Start Dreaming Free
+                </Button>
+              </Link>
+              <Link href="/sign-in">
+                <Button size="lg" variant="outline" className="text-lg px-8 py-4 border-white/20 hover:bg-white/10">
+                  <ArrowRight className="h-5 w-5 mr-2" />
+                  Sign In
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing Section */}
       <section id="pricing" className="py-12">
         <Pricing />
@@ -880,6 +1087,30 @@ export default function LandingPage() {
                     className="text-white/60 hover:text-white transition-colors duration-200"
                   >
                     Features
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => scrollToSection("#how-it-works")}
+                    className="text-white/60 hover:text-white transition-colors duration-200"
+                  >
+                    How It Works
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => scrollToSection("#benefits")}
+                    className="text-white/60 hover:text-white transition-colors duration-200"
+                  >
+                    Benefits
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => scrollToSection("#testimonials")}
+                    className="text-white/60 hover:text-white transition-colors duration-200"
+                  >
+                    Testimonials
                   </button>
                 </li>
                 <li>
