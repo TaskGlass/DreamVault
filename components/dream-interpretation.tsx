@@ -26,14 +26,14 @@ export function DreamInterpretation({ title = "Dream Interpretation", content, s
         const isSymbol = !isEmotional
         
         let sectionClass = "bg-purple-500/10 border-l-4 border-purple-400"
-        let headerClass = "text-xl font-bold text-purple-200 mb-1"
+        let headerClass = "text-xl font-bold text-purple-200 mb-2"
         
         if (isEmotional) {
           sectionClass = "bg-blue-500/10 border-l-4 border-blue-400"
-          headerClass = "text-lg font-bold text-blue-300"
+          headerClass = "text-xl font-bold text-blue-300 mb-2"
         } else {
-          // Make symbol headers more prominent and title-like
-          headerClass = "text-2xl font-bold text-purple-100 mb-2 pb-2 border-b border-purple-400/30"
+          // Make symbol headers consistent with emotional sections
+          headerClass = "text-xl font-bold text-purple-200 mb-2"
         }
         
         const sectionElement = (
@@ -41,10 +41,10 @@ export function DreamInterpretation({ title = "Dream Interpretation", content, s
             <h3 className={headerClass}>
               {header}
             </h3>
-            <div className="mt-3 text-gray-300 leading-relaxed text-sm">
+            <div className="mt-3 text-gray-300 leading-relaxed text-base">
               {body.trim().split('\n').map((paragraph: string, idx: number) => (
                 paragraph.trim() ? (
-                  <p key={idx} className="mb-2 last:mb-0">
+                  <p key={idx} className="mb-2 last:mb-0 text-base">
                     {paragraph.trim()}
                   </p>
                 ) : null
@@ -63,10 +63,10 @@ export function DreamInterpretation({ title = "Dream Interpretation", content, s
         // Handle intro text without headers
         const introElement = (
           <div key={i} className="bg-gray-500/10 border-l-4 border-gray-400 rounded-lg p-4 mb-4">
-            <div className="text-gray-300 leading-relaxed text-sm">
+            <div className="text-gray-300 leading-relaxed text-base">
               {header.trim().split('\n').map((paragraph: string, idx: number) => (
                 paragraph.trim() ? (
-                  <p key={idx} className="mb-2 last:mb-0">
+                  <p key={idx} className="mb-2 last:mb-0 text-base">
                     {paragraph.trim()}
                   </p>
                 ) : null
@@ -83,10 +83,10 @@ export function DreamInterpretation({ title = "Dream Interpretation", content, s
     
     return allSections.length > 0 ? allSections : (
       <div className="bg-gray-500/10 border-l-4 border-gray-400 rounded-lg p-4">
-        <div className="text-gray-300 leading-relaxed text-sm">
+        <div className="text-gray-300 leading-relaxed text-base">
           {content.split('\n').map((paragraph: string, idx: number) => (
             paragraph.trim() ? (
-              <p key={idx} className="mb-2 last:mb-0">
+              <p key={idx} className="mb-2 last:mb-0 text-base">
                 {paragraph.trim()}
               </p>
             ) : null

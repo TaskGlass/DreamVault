@@ -27,6 +27,7 @@ import {
   RefreshCw,
   Trash2,
   MoreVertical,
+  LogOut,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
@@ -137,8 +138,10 @@ export default function DashboardPage() {
         })
         const topMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
         const rawTopSymbol = Object.entries(symbolCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
-        // Truncate top symbol to 1-2 words max
-        const topSymbol = rawTopSymbol.split(' ').slice(0, 2).join(' ')
+        // Get the most meaningful word from the top symbol (skip articles like "the", "a", "an")
+        const words = rawTopSymbol.split(' ')
+        const meaningfulWords = words.filter(word => !['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'].includes(word.toLowerCase()))
+        const topSymbol = meaningfulWords[0] || words[0] || ''
         setDreamStats({ total, month, topMood, topSymbol })
       }
     }
@@ -508,7 +511,10 @@ export default function DashboardPage() {
         })
         const topMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
         const rawTopSymbol = Object.entries(symbolCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
-        const topSymbol = rawTopSymbol.split(' ').slice(0, 2).join(' ')
+        // Get the most meaningful word from the top symbol (skip articles like "the", "a", "an")
+        const words = rawTopSymbol.split(' ')
+        const meaningfulWords = words.filter(word => !['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'].includes(word.toLowerCase()))
+        const topSymbol = meaningfulWords[0] || words[0] || ''
         setDreamStats({ total, month, topMood, topSymbol })
       }
 
@@ -565,8 +571,11 @@ export default function DashboardPage() {
             if (d.symbols) d.symbols.forEach((s: string) => symbolCounts[s] = (symbolCounts[s] || 0) + 1)
           })
           const topMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
-          const rawTopSymbol = Object.entries(symbolCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
-          const topSymbol = rawTopSymbol.split(' ').slice(0, 2).join(' ')
+                  const rawTopSymbol = Object.entries(symbolCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
+        // Get the most meaningful word from the top symbol (skip articles like "the", "a", "an")
+        const words = rawTopSymbol.split(' ')
+        const meaningfulWords = words.filter(word => !['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'].includes(word.toLowerCase()))
+        const topSymbol = meaningfulWords[0] || words[0] || ''
           setDreamStats({ total, month, topMood, topSymbol })
         }
       }
@@ -610,6 +619,7 @@ export default function DashboardPage() {
               </h1>
               <p className="text-gray-400 mt-1 text-base">Welcome back to your dream sanctuary</p>
             </div>
+
           </div>
 
           {/* Quick Stats */}
@@ -654,42 +664,8 @@ export default function DashboardPage() {
             <GlassCard className="text-center p-3 sm:p-4 md:p-6 min-h-[120px] sm:min-h-[140px] flex flex-col justify-between">
               <div className="flex-1 flex flex-col items-center">
                 <Zap className="h-6 w-6 sm:h-6 sm:w-6 text-yellow-400 mx-auto mb-2 flex-shrink-0" />
-                <p className="text-lg sm:text-lg md:text-xl lg:text-2xl font-bold leading-tight mb-1 break-words hyphens-auto px-1 max-w-full" 
-                   style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
-                   title={dreamStats.topSymbol ? dreamStats.topSymbol : 'Skyscraper: Ambition'}>
-                  {dreamStats.topSymbol ? (
-                    (() => {
-                      const symbolText = dreamStats.topSymbol
-                      const hasColon = symbolText.includes(':')
-                      
-                      if (hasColon) {
-                        const [firstPart, ...restParts] = symbolText.split(':')
-                        return (
-                          <>
-                            <span className="block leading-tight">{firstPart.trim()}:</span>
-                            <span className="block text-base sm:text-base leading-tight">{restParts.join(':').trim()}</span>
-                          </>
-                        )
-                      } else {
-                        const words = symbolText.split(' ')
-                        if (words.length > 1) {
-                          return (
-                            <>
-                              <span className="block leading-tight">{words[0]}:</span>
-                              <span className="block text-base sm:text-base leading-tight">{words.slice(1).join(' ')}</span>
-                            </>
-                          )
-                        } else {
-                          return <span className="block leading-tight">{symbolText}</span>
-                        }
-                      }
-                    })()
-                  ) : (
-                    <>
-                      <span className="block leading-tight">Skyscraper:</span>
-                      <span className="block text-base sm:text-base leading-tight">Ambition</span>
-                    </>
-                  )}
+                <p className="text-2xl sm:text-2xl md:text-3xl font-bold leading-none mb-1 truncate w-full px-1" title={dreamStats.topSymbol || 'Skyscraper'}>
+                  {dreamStats.topSymbol || 'Skyscraper'}
                 </p>
                 <p className="text-base sm:text-base text-gray-400 leading-tight">Top Symbol</p>
               </div>

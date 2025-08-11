@@ -45,7 +45,7 @@ export function Navigation() {
       {/* Mobile Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
         <div className="glass-card mx-4 mb-6 rounded-2xl p-2">
-          <div className="flex justify-around">
+          <div className="flex">
             {navigation.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -54,22 +54,16 @@ export function Navigation() {
                   key={item.name}
                   onClick={() => router.push(item.href)}
                   className={cn(
-                    "flex flex-col items-center p-2 rounded-xl transition-all",
+                    "flex-1 flex flex-col items-center justify-center p-3 rounded-xl transition-all mx-1 min-h-[60px]",
                     isActive ? "bg-purple-500/20 text-purple-300" : "text-gray-400 hover:text-white",
                   )}
                 >
-                  <Icon className="h-5 w-5" />
-                  <span className="text-xs mt-1">{item.name}</span>
+                  <Icon className="h-5 w-5 mb-1" />
+                  <span className="text-xs text-center leading-tight">{item.name}</span>
                 </button>
               );
             })}
-            <button
-              onClick={handleLogout}
-              className="flex flex-col items-center p-2 rounded-xl transition-all text-gray-400 hover:text-red-400"
-            >
-              <LogOut className="h-5 w-5" />
-              <span className="text-xs mt-1">Logout</span>
-            </button>
+
           </div>
         </div>
       </nav>

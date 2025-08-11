@@ -53,8 +53,10 @@ export default function JournalPage() {
         })
         const topMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
         const rawTopSymbol = Object.entries(symbolCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
-        // Truncate top symbol to 1-2 words max
-        const topSymbol = rawTopSymbol.split(' ').slice(0, 2).join(' ')
+        // Get the most meaningful word from the top symbol (skip articles like "the", "a", "an")
+        const words = rawTopSymbol.split(' ')
+        const meaningfulWords = words.filter(word => !['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'].includes(word.toLowerCase()))
+        const topSymbol = meaningfulWords[0] || words[0] || ''
         setDreamStats({ total, month, topMood, topSymbol })
       }
     }
@@ -98,9 +100,12 @@ export default function JournalPage() {
             if (d.mood) moodCounts[d.mood] = (moodCounts[d.mood] || 0) + 1
             if (d.symbols) d.symbols.forEach((s: string) => symbolCounts[s] = (symbolCounts[s] || 0) + 1)
           })
-          const topMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
-          const rawTopSymbol = Object.entries(symbolCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
-          const topSymbol = rawTopSymbol.split(' ').slice(0, 2).join(' ')
+                      const topMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
+                    const rawTopSymbol = Object.entries(symbolCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
+        // Get the most meaningful word from the top symbol (skip articles like "the", "a", "an")
+        const words = rawTopSymbol.split(' ')
+        const meaningfulWords = words.filter(word => !['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'].includes(word.toLowerCase()))
+        const topSymbol = meaningfulWords[0] || words[0] || ''
           setDreamStats({ total, month, topMood, topSymbol })
         }
       }

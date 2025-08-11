@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
-import { User, Camera, Star, Crown, Zap, Settings, Bell, Moon, Heart, Calendar } from "lucide-react"
+import { User, Camera, Star, Crown, Zap, Settings, Bell, Moon, Heart, Calendar, LogOut } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/lib/supabaseClient"
 
@@ -135,13 +135,31 @@ export default function ProfilePage() {
                 and spiritual preferences
               </p>
             </div>
-            <Button
-              size="sm"
-              onClick={isEditing ? handleSave : () => setIsEditing(true)}
-              className="bg-gradient-to-r from-purple-600 to-blue-600"
-            >
-              {isEditing ? "Save Changes" : "Edit Profile"}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  try {
+                    await supabase.auth.signOut();
+                    window.location.href = '/sign-in';
+                  } catch (error) {
+                    console.error('Error logging out:', error);
+                  }
+                }}
+                className="bg-red-500/10 hover:bg-red-500/20 border-red-500/30 text-red-300 hover:text-red-200"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+              <Button
+                size="sm"
+                onClick={isEditing ? handleSave : () => setIsEditing(true)}
+                className="bg-gradient-to-r from-purple-600 to-blue-600"
+              >
+                {isEditing ? "Save Changes" : "Edit Profile"}
+              </Button>
+            </div>
           </div>
 
           {/* Profile Card */}
