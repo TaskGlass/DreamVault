@@ -224,7 +224,7 @@ export default function LandingPage() {
             </div>
 
             {/* Navigation Links */}
-            <div className="hidden md:flex items-center space-x-5">
+            <div className={`hidden md:flex items-center ${scrolled ? 'space-x-5' : 'space-x-8 lg:space-x-10'}`}>
               {navigationItems.map((item) => (
                 <button
                   key={item.name}
