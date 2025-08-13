@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { User, Camera, Star, Crown, Zap, Settings, Bell, Moon, Heart, Calendar, LogOut } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/lib/supabaseClient"
@@ -34,6 +35,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<any>(null)
   const [currentPlan, setCurrentPlan] = useState<any>(null)
   const [isEditing, setIsEditing] = useState(false)
+  const [plansOpen, setPlansOpen] = useState(false)
   const { toast } = useToast()
 
   // Initialize inactivity timeout (3 minutes)
@@ -372,13 +374,14 @@ export default function ProfilePage() {
                 </ul>
 
                 <div className="mt-6 space-y-2">
-                  <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600">
+                  <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600" onClick={() => handleUpgrade('Astral Voyager')}>
                     <Crown className="h-4 w-4 mr-2" />
                     Upgrade to Astral Voyager
                   </Button>
                   <Button
                     variant="outline"
                     className="w-full bg-purple-600/20 border-purple-400/30 text-white hover:bg-purple-600/30"
+                    onClick={() => setPlansOpen(true)}
                   >
                     View All Plans
                   </Button>
@@ -417,6 +420,64 @@ export default function ProfilePage() {
               </div>
             </div>
           </GlassCard>
+
+          {/* Plans Modal */}
+          <Dialog open={plansOpen} onOpenChange={setPlansOpen}>
+            <DialogContent className="max-w-3xl bg-black border border-white/10">
+              <DialogHeader>
+                <DialogTitle>Choose a Plan</DialogTitle>
+                <DialogDescription>Select the plan that fits your journey. You will be taken to a secure Stripe checkout.</DialogDescription>
+              </DialogHeader>
+              <div className="grid sm:grid-cols-3 gap-4 mt-2">
+                {/* Free Plan */}
+                <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex flex-col h-full">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Star className="h-5 w-5 text-blue-400" />
+                    <div className="font-semibold">Dream Lite (Free)</div>
+                  </div>
+                  <ul className="text-sm text-gray-300 mb-3 list-disc list-inside space-y-1">
+                    <li>5 dream interpretations</li>
+                    <li>5 tarot readings</li>
+                    <li>Basic dream journal</li>
+                    <li>Save dreams</li>
+                    <li>Community support</li>
+                  </ul>
+                  <Button variant="outline" className="w-full mt-auto" onClick={() => setPlansOpen(false)}>Stay on Free</Button>
+                </div>
+                {/* Lucid Explorer */}
+                <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex flex-col h-full">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Zap className="h-5 w-5 text-purple-400" />
+                    <div className="font-semibold">Lucid Explorer</div>
+                  </div>
+                  <ul className="text-sm text-gray-300 mb-3 list-disc list-inside space-y-1">
+                    <li>15 dream interpretations</li>
+                    <li>15 tarot readings</li>
+                    <li>Advanced mood & emotion insights</li>
+                    <li>Daily affirmations</li>
+                    <li>Priority email support</li>
+                  </ul>
+                  <Button className="w-full mt-auto" onClick={() => handleUpgrade('Lucid Explorer')}>Choose Lucid Explorer</Button>
+                </div>
+                {/* Astral Voyager */}
+                <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex flex-col h-full">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Crown className="h-5 w-5 text-yellow-400" />
+                    <div className="font-semibold">Astral Voyager</div>
+                  </div>
+                  <ul className="text-sm text-gray-300 mb-3 list-disc list-inside space-y-1">
+                    <li>30 dream interpretations</li>
+                    <li>30 tarot readings</li>
+                    <li>Weekly dream pattern summaries</li>
+                    <li>Shareable dream reports</li>
+                    <li>Advanced symbol analysis</li>
+                    <li>Priority support</li>
+                  </ul>
+                  <Button variant="outline" className="w-full mt-auto" onClick={() => handleUpgrade('Astral Voyager')}>Choose Astral Voyager</Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           {/* Settings */}
           <GlassCard>

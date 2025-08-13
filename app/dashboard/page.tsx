@@ -156,6 +156,27 @@ export default function DashboardPage() {
     fetchUserData()
   }, [])
 
+  const handleUpgrade = async (plan: string) => {
+    try {
+      const user = (await supabase.auth.getUser()).data.user
+      if (!user) {
+        toast({ title: "Please sign in", description: "You need to be signed in to upgrade.", variant: "destructive" })
+        router.push('/sign-in')
+        return
+      }
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email, plan })
+      })
+      const data = await res.json()
+      if (data?.url) window.location.href = data.url
+      else throw new Error(data?.error || 'Failed to start checkout')
+    } catch (e) {
+      toast({ title: 'Checkout failed', description: e instanceof Error ? e.message : 'Try again in a moment.', variant: 'destructive' })
+    }
+  }
+
   const analyzeDream = async () => {
     if (!dream.trim()) {
       toast({
@@ -1060,13 +1081,23 @@ export default function DashboardPage() {
                     <p className="text-sm text-gray-400 mt-1">2 tarot readings remaining this month</p>
                   </div>
 
-                  <Button
-                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600"
-                    onClick={() => navigateToPage("/profile")}
-                  >
-                    <Crown className="h-4 w-4 mr-2" />
-                    Upgrade Plan
-                  </Button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <Button
+                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600"
+                  onClick={() => handleUpgrade('Lucid Explorer')}
+                >
+                  <Crown className="h-4 w-4 mr-2" />
+                  Upgrade to Lucid Explorer
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => handleUpgrade('Astral Voyager')}
+                >
+                  <Crown className="h-4 w-4 mr-2" />
+                  Upgrade to Astral Voyager
+                </Button>
+              </div>
                 </div>
               </GlassCard>
 
