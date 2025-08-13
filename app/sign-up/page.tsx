@@ -93,7 +93,25 @@ export default function SignUpPage() {
     }
 
     setIsLoading(false)
-    // Redirect to dashboard on successful signup
+
+    // If signup originated from a plan selection, forward to checkout
+    const params = new URLSearchParams(window.location.search)
+    const selectedPlan = params.get('plan')
+    const cycle = params.get('cycle') || 'monthly'
+    if (selectedPlan) {
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, plan: selectedPlan, billingCycle: cycle })
+      })
+      const data = await res.json()
+      if (data?.url) {
+        window.location.href = data.url
+        return
+      }
+    }
+
+    // Otherwise go to dashboard
     window.location.href = "/dashboard"
   }
 

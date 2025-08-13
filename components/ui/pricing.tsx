@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { Check, Crown, Sparkles, Zap } from "lucide-react"
 import Link from "next/link"
+import { supabase } from "@/lib/supabaseClient"
 
 type Plan = {
   name: string
@@ -73,6 +74,21 @@ const dreamVaultPlans: Plan[] = [
 
 export function Pricing() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly")
+  const handleChoosePlan = async (planName: string) => {
+    const session = (await supabase.auth.getSession()).data.session
+    if (!session) {
+      window.location.href = `/sign-up?plan=${encodeURIComponent(planName)}&cycle=${billingCycle}`
+      return
+    }
+    const email = session.user.email || undefined
+    const res = await fetch('/api/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, plan: planName, billingCycle })
+    })
+    const data = await res.json()
+    if (data?.url) window.location.href = data.url
+  }
 
   return (
     <div className="max-w-md md:max-w-7xl mx-auto px-4">
@@ -164,18 +180,32 @@ export function Pricing() {
                 ))}
               </ul>
 
-              <Link href="/sign-up" className="mt-auto">
+              {isFree ? (
+                <Link href="/sign-up" className="mt-auto">
+                  <Button
+                    className={cn(
+                      "w-full",
+                      plan.popular
+                        ? "bg-gradient-to-r from-purple-600 to-blue-600"
+                        : "bg-white/10 hover:bg-white/20",
+                    )}
+                  >
+                    Interpret Dream
+                  </Button>
+                </Link>
+              ) : (
                 <Button
+                  onClick={() => handleChoosePlan(plan.name)}
                   className={cn(
-                    "w-full",
+                    "w-full mt-auto",
                     plan.popular
                       ? "bg-gradient-to-r from-purple-600 to-blue-600"
                       : "bg-white/10 hover:bg-white/20",
                   )}
                 >
-                  {isFree ? "Interpret Dream" : "Choose Plan"}
+                  Choose Plan
                 </Button>
-              </Link>
+              )}
             </div>
           )
         })}

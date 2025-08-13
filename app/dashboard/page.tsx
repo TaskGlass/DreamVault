@@ -1,4 +1,5 @@
 "use client"
+export const dynamic = "force-dynamic"
 
 import { useState, useEffect } from "react"
 import { Navigation } from "@/components/navigation"
@@ -79,7 +80,10 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchUserData = async () => {
       const user = (await supabase.auth.getUser()).data.user
-      if (!user) return
+      if (!user) {
+        router.replace('/sign-in')
+        return
+      }
 
       // Fetch user profile
       const { data: profile } = await supabase
@@ -99,12 +103,12 @@ export default function DashboardPage() {
         // Fetch personalized daily horoscope
         if (profile.zodiac) {
           try {
+            const session = (await supabase.auth.getSession()).data.session
             const response = await fetch('/api/daily-horoscope', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json', ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}) },
               body: JSON.stringify({ 
-                zodiacSign: profile.zodiac,
-                userId: user.id 
+                zodiacSign: profile.zodiac
               })
             })
             const horoscopeResult = await response.json()
@@ -183,10 +187,12 @@ export default function DashboardPage() {
     setIsAnalyzing(true)
 
     try {
+      const session = (await supabase.auth.getSession()).data.session
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
         },
         body: JSON.stringify({
           messages: [
@@ -335,12 +341,12 @@ export default function DashboardPage() {
       const user = (await supabase.auth.getUser()).data.user
       if (!user) return
 
+      const session = (await supabase.auth.getSession()).data.session
       const response = await fetch('/api/daily-horoscope', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}) },
         body: JSON.stringify({ 
           zodiacSign: userProfile.zodiac,
-          userId: user.id,
           forceRefresh: true
         })
       })

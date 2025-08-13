@@ -1,10 +1,33 @@
 import { openai } from "@ai-sdk/openai"
 import { streamText } from "ai"
+import { createServerSupabase } from "@/lib/supabaseServer"
+import { checkAndConsumeUsage } from "@/lib/subscription"
 
 export const maxDuration = 30
 
 export async function POST(req: Request) {
   try {
+    const supabase = createServerSupabase(req)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      })
+    }
+
+    const { allowed, remaining, plan, limit } = await checkAndConsumeUsage(
+      supabase,
+      user.id,
+      "dream_interpretation"
+    )
+    if (!allowed) {
+      return new Response(JSON.stringify({
+        error: "Quota exceeded",
+        detail: { feature: "dream_interpretation", plan, limit, remaining }
+      }), { status: 402, headers: { "Content-Type": "application/json" } })
+    }
+
     const { messages } = await req.json()
 
     // Check if API key is available
@@ -62,7 +85,7 @@ export async function POST(req: Request) {
       ],
     })
 
-    return result.toDataStreamResponse()
+    return result.toTextStreamResponse()
   } catch (error) {
     console.error("Error in chat API:", error)
     return new Response(JSON.stringify({ error: "Failed to process dream interpretation" }), {

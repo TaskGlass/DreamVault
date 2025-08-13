@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16',
-})
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
 // Map plan names and billing cycles to Stripe Price IDs
 const PRICE_IDS: Record<string, Record<string, string>> = {
@@ -18,25 +16,29 @@ const PRICE_IDS: Record<string, Record<string, string>> = {
 }
 
 export async function POST(req: NextRequest) {
-  const { email, plan, billingCycle } = await req.json()
-  if (!email || !plan || !billingCycle || !PRICE_IDS[plan]?.[billingCycle]) {
+  const { email, plan, billingCycle = 'monthly' } = await req.json()
+  if (!plan || !billingCycle || !PRICE_IDS[plan]?.[billingCycle]) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   }
 
   // Create Stripe Checkout session
+  const origin = req.headers.get('origin') || 'http://localhost:3000'
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
     mode: 'subscription',
-    customer_email: email,
+    customer_email: email || undefined,
     line_items: [
       {
         price: PRICE_IDS[plan][billingCycle],
         quantity: 1,
       },
     ],
-    success_url: `https://www.dreamvault.ai/home?checkout=success`,
-    cancel_url: `https://www.dreamvault.ai/home?checkout=cancel`,
+    success_url: `${origin}/home?checkout=success`,
+    cancel_url: `${origin}/home?checkout=cancel`,
+    metadata: { plan, billingCycle },
   })
 
   return NextResponse.json({ url: session.url })
-} 
+}
+
+
