@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { supabaseAdmin } from '@/lib/supabaseAdmin'
+import { getSupabaseAdmin } from '@/lib/supabaseAdmin'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (customerEmail) {
+      const supabaseAdmin = getSupabaseAdmin()
       const { data: user } = await supabaseAdmin
         .from('profiles')
         .select('id')
@@ -68,6 +69,7 @@ export async function POST(req: NextRequest) {
     const periodStart = subscription.current_period_start ? new Date(subscription.current_period_start * 1000).toISOString() : null
     const periodEnd = subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : null
     // Update subscription in Supabase
+    const supabaseAdmin = getSupabaseAdmin()
     await supabaseAdmin
       .from('subscriptions')
       .update({ status, current_period_start: periodStart, current_period_end: periodEnd, updated_at: new Date().toISOString() })
