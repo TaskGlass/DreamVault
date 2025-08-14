@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { zodiacSign, forceRefresh } = await req.json()
+  const { zodiacSign, forceRefresh, firstName } = await req.json()
   if (!zodiacSign) {
     return NextResponse.json({ error: 'Zodiac sign is required' }, { status: 400 })
   }
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
 Requirements:
 - Write in plain text with NO markdown, asterisks, or special formatting
 - 4-6 sentences for the main reading, then add a "Cosmic tip:" with a philosophical quote
-- Address ${zodiacSign} directly by name at least once
+- Address the person by their first name "${firstName || 'dear soul'}" instead of their zodiac sign
 - Include specific, relatable activities and advice (like spending time in nature, creative pursuits, relationships, diet, mindfulness)
 - Blend practical life advice with spiritual/cosmic insights
 - Use poetic, metaphorical language ("inner chi", "soul's compass", "energy flows")
@@ -61,7 +61,7 @@ Requirements:
 - End with "Cosmic tip: [inspirational quote or wisdom]"
 - Keep the tone warm, mystical, and uplifting like a wise friend giving guidance
 
-Example style: "Spend some extra time cuddling with your pets today, Pisces. And for those whose pets have transitioned to happier playgrounds, your beloved four-legged bundles of joy send you love across the realms. This is also a cue for those considering a switch in their diet to a vegetarian or more conscious one, perhaps give it a short run to see if it is for keeps. On another note, the more you think of vibrant thoughts, the more you attract happier thoughts and experiences in your life. You are immensely gifted, Pisces, and you must remember that at every given step in time. Let your popcorn brain rest a while, and allow your inner chi to flow in the direction of your soul.
+Example style: "Spend some extra time cuddling with your pets today, ${firstName || 'dear soul'}. And for those whose pets have transitioned to happier playgrounds, your beloved four-legged bundles of joy send you love across the realms. This is also a cue for those considering a switch in their diet to a vegetarian or more conscious one, perhaps give it a short run to see if it is for keeps. On another note, the more you think of vibrant thoughts, the more you attract happier thoughts and experiences in your life. You are immensely gifted, ${firstName || 'dear soul'}, and you must remember that at every given step in time. Let your popcorn brain rest a while, and allow your inner chi to flow in the direction of your soul.
 
 Cosmic tip: You need not always do. Sometimes the best way to do is to be."`
 

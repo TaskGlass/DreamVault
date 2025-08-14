@@ -278,6 +278,7 @@ export default function ReadingsPage() {
   const [loadingAffirmation, setLoadingAffirmation] = useState(false)
   const [todaysMoonPhase, setTodaysMoonPhase] = useState<string>("")
   const [loadingMoonPhase, setLoadingMoonPhase] = useState(false)
+  const [userFirstName, setUserFirstName] = useState<string>("")
 
   const tarotRef = useRef<HTMLDivElement>(null)
   const horoscopeRef = useRef<HTMLDivElement>(null)
@@ -312,10 +313,11 @@ export default function ReadingsPage() {
       if (!user) return
       const { data: profile } = await supabase
         .from('profiles')
-        .select('zodiac')
+        .select('zodiac, first_name')
         .eq('id', user.id)
         .single()
       setUserZodiac(profile?.zodiac || "")
+      setUserFirstName(profile?.first_name || "")
     }
     fetchUserZodiac()
   }, [])
@@ -325,10 +327,15 @@ export default function ReadingsPage() {
     setLoadingHoroscope(true)
     const today = new Date().toISOString().slice(0, 10)
     // Check if horoscope already exists in Supabase
+    const user = (await supabase.auth.getUser()).data.user
+    if (!user) {
+      setLoadingHoroscope(false)
+      return
+    }
     const { data: existing } = await supabase
       .from('horoscopes')
       .select('content')
-      .eq('user_id', (await supabase.auth.getUser()).data.user.id)
+      .eq('user_id', user.id)
       .eq('zodiac', userZodiac)
       .eq('date', today)
       .single()
@@ -348,7 +355,7 @@ export default function ReadingsPage() {
     // Store in Supabase
     await supabase.from('horoscopes').insert([
       {
-        user_id: (await supabase.auth.getUser()).data.user.id,
+        user_id: user.id,
         zodiac: userZodiac,
         date: today,
         content: horoscope,
@@ -379,7 +386,8 @@ export default function ReadingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           zodiacSign: userZodiac,
-          userId: user.id 
+          userId: user.id,
+          firstName: userFirstName
         })
       })
       
@@ -419,10 +427,15 @@ export default function ReadingsPage() {
   const fetchAffirmation = async () => {
     setLoadingAffirmation(true)
     const today = new Date().toISOString().slice(0, 10)
+    const user = (await supabase.auth.getUser()).data.user
+    if (!user) {
+      setLoadingAffirmation(false)
+      return
+    }
     const { data: existing } = await supabase
       .from('affirmations')
       .select('content')
-      .eq('user_id', (await supabase.auth.getUser()).data.user.id)
+      .eq('user_id', user.id)
       .eq('date', today)
       .single()
     if (existing?.content) {
@@ -439,7 +452,7 @@ export default function ReadingsPage() {
     setTodaysAffirmation(affirmation)
     await supabase.from('affirmations').insert([
       {
-        user_id: (await supabase.auth.getUser()).data.user.id,
+        user_id: user.id,
         date: today,
         content: affirmation,
       },
@@ -542,11 +555,12 @@ export default function ReadingsPage() {
           </div>
 
           {/* Tarot Reading */}
-          <GlassCard ref={tarotRef}>
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <Shuffle className="h-5 w-5 mr-2 text-purple-400" />
-              Tarot Reading
-            </h2>
+          <div ref={tarotRef}>
+            <GlassCard>
+              <h2 className="text-xl font-semibold mb-4 flex items-center">
+                <Shuffle className="h-5 w-5 mr-2 text-purple-400" />
+                Tarot Reading
+              </h2>
 
             {selectedCards.length === 0 && !isDrawing ? (
               <div className="text-center py-12">
@@ -600,42 +614,47 @@ export default function ReadingsPage() {
               </div>
             )}
           </GlassCard>
+          </div>
 
           {/* Horoscope */}
-          <GlassCard ref={horoscopeRef} glow>
-            <h2 className="text-xl font-semibold mb-6 flex items-center">
-              <Star className="h-5 w-5 mr-2 text-yellow-400" />
-              Your Horoscope
-            </h2>
+          <div ref={horoscopeRef}>
+            <GlassCard glow>
+              <h2 className="text-xl font-semibold mb-6 flex items-center">
+                <Star className="h-5 w-5 mr-2 text-yellow-400" />
+                Your Horoscope
+              </h2>
 
-            <div className="space-y-6">
-              {/* Header Section */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="text-4xl mr-4">{currentHoroscope?.symbol}</div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-yellow-300">{currentHoroscope?.sign}</h3>
-                    <p className="text-sm text-gray-400">{currentHoroscope?.date}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge className="bg-orange-500/20 text-orange-300">{currentHoroscope?.element} Sign</Badge>
-                      <Badge className="bg-yellow-500/20 text-yellow-300">
-                        Ruled by {currentHoroscope?.rulingPlanet}
-                      </Badge>
+            {loadingHoroscope ? (
+              <div className="text-center py-8">
+                <div className="animate-spin text-4xl mb-4">⭐</div>
+                <p className="text-gray-300">Loading your personalized horoscope...</p>
+              </div>
+            ) : currentHoroscope ? (
+              <div className="space-y-6">
+                {/* Header Section */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="text-4xl mr-4">{currentHoroscope.symbol}</div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-yellow-300">{currentHoroscope.sign}</h3>
+                      <p className="text-sm text-gray-400">{currentHoroscope.date}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge className="bg-orange-500/20 text-orange-300">{currentHoroscope.element} Sign</Badge>
+                        <Badge className="bg-yellow-500/20 text-yellow-300">
+                          Ruled by {currentHoroscope.rulingPlanet}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Main Reading */}
-              <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-lg p-6">
-                <h4 className="font-semibold text-yellow-300 mb-3 flex items-center">
-                  <Star className="h-4 w-4 mr-2" />
-                  Daily Overview
-                </h4>
-                {loadingHoroscope ? (
-                  <p className="text-gray-300 leading-relaxed">Loading your personalized horoscope...</p>
-                ) : todaysHoroscope ? (
-                  (() => {
+                {/* Main Reading */}
+                <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-lg p-6">
+                  <h4 className="font-semibold text-yellow-300 mb-3 flex items-center">
+                    <Star className="h-4 w-4 mr-2" />
+                    Daily Overview
+                  </h4>
+                  {(() => {
                     const parts = todaysHoroscope.split('\n\nCosmic tip:')
                     const mainReading = parts[0]
                     const cosmicTip = parts[1]
@@ -655,110 +674,124 @@ export default function ReadingsPage() {
                         )}
                       </div>
                     )
-                  })()
-                ) : (
-                  <p className="text-gray-300 leading-relaxed">Your daily horoscope will appear here.</p>
+                  })()}
+                </div>
+
+                {/* Life Areas Grid */}
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div className="bg-gradient-to-br from-pink-500/10 to-red-500/10 rounded-lg p-4">
+                    <h5 className="font-medium text-pink-300 mb-2 flex items-center">
+                      <Heart className="h-4 w-4 mr-2" />
+                      Love & Relationships
+                    </h5>
+                    <p className="text-xs md:text-sm text-gray-300 leading-relaxed">{currentHoroscope.love}</p>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-lg p-4">
+                    <h5 className="font-medium text-green-300 mb-2 flex items-center">
+                      <Star className="h-4 w-4 mr-2" />
+                      Career & Finance
+                    </h5>
+                    <p className="text-xs md:text-sm text-gray-300 leading-relaxed">{currentHoroscope.career}</p>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-lg p-4">
+                    <h5 className="font-medium text-blue-300 mb-2 flex items-center">
+                      <Heart className="h-4 w-4 mr-2" />
+                      Health & Wellness
+                    </h5>
+                    <p className="text-xs md:text-sm text-gray-300 leading-relaxed">{currentHoroscope.health}</p>
+                  </div>
+                </div>
+
+                {/* Lucky Elements */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="bg-gradient-to-r from-purple-500/10 to-indigo-500/10 rounded-lg p-4">
+                    <h5 className="font-medium text-purple-300 mb-3">Lucky Elements</h5>
+                    <div className="space-y-2 text-sm md:text-base">
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Color:</span>
+                        <span className="text-yellow-300">{currentHoroscope?.lucky || 'Unknown'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Numbers:</span>
+                        <span className="text-yellow-300">{currentHoroscope?.luckyNumbers?.join(", ") || 'Unknown'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Best Time:</span>
+                        <span className="text-yellow-300">{currentHoroscope?.bestTime || 'Unknown'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-lg p-4">
+                    <h5 className="font-medium text-indigo-300 mb-3">Cosmic Influences</h5>
+                    <div className="space-y-2 text-sm md:text-base">
+                      <div>
+                        <span className="text-gray-400">Moon Phase:</span>
+                        <p className="text-indigo-300 text-xs md:text-sm">{currentHoroscope?.moonPhase || 'Unknown'}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-400">Planetary Energy:</span>
+                        <p className="text-indigo-300 text-xs md:text-sm">{currentHoroscope?.planetaryInfluence || 'Unknown'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dream Guidance */}
+                <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg p-6">
+                  <h5 className="font-medium text-purple-300 mb-3 flex items-center">
+                    <Moon className="h-4 w-4 mr-2" />
+                    Dream Symbols to Watch For
+                  </h5>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {currentHoroscope?.dreamSymbols?.map((symbol: string, index: number) => (
+                      <Badge key={index} className="bg-purple-500/20 text-purple-200 text-xs md:text-sm">
+                        {symbol}
+                      </Badge>
+                    )) || []}
+                  </div>
+                  <p className="text-xs md:text-sm text-gray-300 leading-relaxed">
+                    These symbols in your dreams carry special significance for your sign today. Pay attention to their
+                    context and emotions they evoke.
+                  </p>
+                </div>
+
+                {/* Cosmic Advice */}
+                <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-lg p-6">
+                  <h4 className="font-medium text-yellow-300 mb-3 flex items-center">
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Cosmic Guidance
+                  </h4>
+                  <p className="text-sm md:text-base text-gray-300 leading-relaxed">{currentHoroscope.advice}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-4xl mb-4">⭐</div>
+                <p className="text-gray-300 mb-4">Your daily horoscope will appear here once generated.</p>
+                {userZodiac && (
+                  <Button 
+                    onClick={getHoroscope}
+                    className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700"
+                  >
+                    <Star className="h-4 w-4 mr-2" />
+                    Generate Horoscope
+                  </Button>
                 )}
               </div>
-
-              {/* Life Areas Grid */}
-              <div className="grid md:grid-cols-3 gap-4">
-                <div className="bg-gradient-to-br from-pink-500/10 to-red-500/10 rounded-lg p-4">
-                  <h5 className="font-medium text-pink-300 mb-2 flex items-center">
-                    <Heart className="h-4 w-4 mr-2" />
-                    Love & Relationships
-                  </h5>
-                  <p className="text-xs md:text-sm text-gray-300 leading-relaxed">{currentHoroscope?.love}</p>
-                </div>
-
-                <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-lg p-4">
-                  <h5 className="font-medium text-green-300 mb-2 flex items-center">
-                    <Star className="h-4 w-4 mr-2" />
-                    Career & Finance
-                  </h5>
-                  <p className="text-xs md:text-sm text-gray-300 leading-relaxed">{currentHoroscope?.career}</p>
-                </div>
-
-                <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-lg p-4">
-                  <h5 className="font-medium text-blue-300 mb-2 flex items-center">
-                    <Heart className="h-4 w-4 mr-2" />
-                    Health & Wellness
-                  </h5>
-                  <p className="text-xs md:text-sm text-gray-300 leading-relaxed">{currentHoroscope?.health}</p>
-                </div>
-              </div>
-
-              {/* Lucky Elements */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-gradient-to-r from-purple-500/10 to-indigo-500/10 rounded-lg p-4">
-                  <h5 className="font-medium text-purple-300 mb-3">Lucky Elements</h5>
-                  <div className="space-y-2 text-sm md:text-base">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Color:</span>
-                      <span className="text-yellow-300">{currentHoroscope?.lucky}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Numbers:</span>
-                      <span className="text-yellow-300">{currentHoroscope?.luckyNumbers?.join(", ")}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Best Time:</span>
-                      <span className="text-yellow-300">{currentHoroscope?.bestTime}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-lg p-4">
-                  <h5 className="font-medium text-indigo-300 mb-3">Cosmic Influences</h5>
-                  <div className="space-y-2 text-sm md:text-base">
-                    <div>
-                      <span className="text-gray-400">Moon Phase:</span>
-                      <p className="text-indigo-300 text-xs md:text-sm">{currentHoroscope?.moonPhase}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">Planetary Energy:</span>
-                      <p className="text-indigo-300 text-xs md:text-sm">{currentHoroscope?.planetaryInfluence}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Dream Guidance */}
-              <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg p-6">
-                <h5 className="font-medium text-purple-300 mb-3 flex items-center">
-                  <Moon className="h-4 w-4 mr-2" />
-                  Dream Symbols to Watch For
-                </h5>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {currentHoroscope?.dreamSymbols?.map((symbol, index) => (
-                    <Badge key={index} className="bg-purple-500/20 text-purple-200 text-xs md:text-sm">
-                      {symbol}
-                    </Badge>
-                  ))}
-                </div>
-                <p className="text-xs md:text-sm text-gray-300 leading-relaxed">
-                  These symbols in your dreams carry special significance for your sign today. Pay attention to their
-                  context and emotions they evoke.
-                </p>
-              </div>
-
-              {/* Cosmic Advice */}
-              <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-lg p-6">
-                <h4 className="font-medium text-yellow-300 mb-3 flex items-center">
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Cosmic Guidance
-                </h4>
-                <p className="text-sm md:text-base text-gray-300 leading-relaxed">{currentHoroscope?.advice}</p>
-              </div>
-            </div>
+            )}
           </GlassCard>
+          </div>
 
           {/* Moon Phase */}
-          <GlassCard ref={moonRef}>
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <Moon className="h-5 w-5 mr-2 text-blue-400" />
-              Current Moon Phase
-            </h2>
+          <div ref={moonRef}>
+            <GlassCard>
+              <h2 className="text-xl font-semibold mb-4 flex items-center">
+                <Moon className="h-5 w-5 mr-2 text-blue-400" />
+                Current Moon Phase
+              </h2>
 
             <div className="text-center py-8">
               <div className="text-6xl mb-4">🌙</div>
@@ -775,13 +808,15 @@ export default function ReadingsPage() {
               </div>
             </div>
           </GlassCard>
+          </div>
 
           {/* Daily Affirmation */}
-          <GlassCard ref={affirmationRef}>
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <Heart className="h-5 w-5 mr-2 text-pink-400" />
-              Daily Affirmation
-            </h2>
+          <div ref={affirmationRef}>
+            <GlassCard>
+              <h2 className="text-xl font-semibold mb-4 flex items-center">
+                <Heart className="h-5 w-5 mr-2 text-pink-400" />
+                Daily Affirmation
+              </h2>
 
             <div className="text-center py-8">
               <div className="text-4xl mb-4">✨</div>
@@ -793,6 +828,7 @@ export default function ReadingsPage() {
               </p>
             </div>
           </GlassCard>
+          </div>
 
           {/* Zodiac Quick Reference */}
           <GlassCard>

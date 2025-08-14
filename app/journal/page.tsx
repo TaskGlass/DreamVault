@@ -26,7 +26,7 @@ export default function JournalPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedEntry, setSelectedEntry] = useState<any>(null)
   const [dreamEntries, setDreamEntries] = useState<any[]>([])
-  const [dreamStats, setDreamStats] = useState({ total: 0, month: 0, topMood: '', topSymbol: '' })
+  const [dreamStats, setDreamStats] = useState({ total: 0, month: 0, topMood: '', topMoodPercentage: 0, topSymbol: '', topSymbolPercentage: 0 })
   const [deletingDreams, setDeletingDreams] = useState<Set<string>>(new Set())
   const { toast } = useToast()
 
@@ -56,12 +56,16 @@ export default function JournalPage() {
           if (d.symbols) d.symbols.forEach((s: string) => symbolCounts[s] = (symbolCounts[s] || 0) + 1)
         })
         const topMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
+        const topMoodPercentage = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[1] || 0
         const rawTopSymbol = Object.entries(symbolCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
+        const topSymbolCount = Object.entries(symbolCounts).sort((a, b) => b[1] - a[1])[0]?.[1] || 0
         // Get the most meaningful word from the top symbol (skip articles like "the", "a", "an")
         const words = rawTopSymbol.split(' ')
         const meaningfulWords = words.filter(word => !['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'].includes(word.toLowerCase()))
         const topSymbol = meaningfulWords[0] || words[0] || ''
-        setDreamStats({ total, month, topMood, topSymbol })
+        const topMoodPercentageCalc = dreams && dreams.length > 0 ? Math.round((topMoodPercentage / dreams.length) * 100) : 0
+        const topSymbolPercentage = dreams && dreams.length > 0 ? Math.round((topSymbolCount / dreams.length) * 100) : 0
+        setDreamStats({ total, month, topMood, topMoodPercentage: topMoodPercentageCalc, topSymbol, topSymbolPercentage })
       }
     }
     fetchDreams()
@@ -105,12 +109,16 @@ export default function JournalPage() {
             if (d.symbols) d.symbols.forEach((s: string) => symbolCounts[s] = (symbolCounts[s] || 0) + 1)
           })
                       const topMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
-                    const rawTopSymbol = Object.entries(symbolCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
-        // Get the most meaningful word from the top symbol (skip articles like "the", "a", "an")
-        const words = rawTopSymbol.split(' ')
-        const meaningfulWords = words.filter(word => !['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'].includes(word.toLowerCase()))
-        const topSymbol = meaningfulWords[0] || words[0] || ''
-          setDreamStats({ total, month, topMood, topSymbol })
+                      const topMoodPercentage = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[1] || 0
+                      const rawTopSymbol = Object.entries(symbolCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
+                      const topSymbolCount = Object.entries(symbolCounts).sort((a, b) => b[1] - a[1])[0]?.[1] || 0
+                      // Get the most meaningful word from the top symbol (skip articles like "the", "a", "an")
+                      const words = rawTopSymbol.split(' ')
+                      const meaningfulWords = words.filter(word => !['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'].includes(word.toLowerCase()))
+                      const topSymbol = meaningfulWords[0] || words[0] || ''
+                      const topMoodPercentageCalc = allDreams && allDreams.length > 0 ? Math.round((topMoodPercentage / allDreams.length) * 100) : 0
+                      const topSymbolPercentage = allDreams && allDreams.length > 0 ? Math.round((topSymbolCount / allDreams.length) * 100) : 0
+                      setDreamStats({ total, month, topMood, topMoodPercentage: topMoodPercentageCalc, topSymbol, topSymbolPercentage })
         }
       }
 
@@ -204,11 +212,13 @@ export default function JournalPage() {
               <Heart className="h-6 w-6 text-pink-400 mx-auto mb-2" />
               <p className="text-2xl font-bold">{dreamStats.topMood}</p>
               <p className="text-sm text-gray-400">Top Mood</p>
+              <Badge className="mt-2 bg-pink-500/20 text-pink-300 text-xs">{dreamStats.topMoodPercentage || 0}%</Badge>
             </GlassCard>
             <GlassCard className="text-center">
               <Zap className="h-6 w-6 text-yellow-400 mx-auto mb-2" />
               <p className="text-2xl font-bold">{dreamStats.topSymbol}</p>
               <p className="text-sm text-gray-400">Top Symbol</p>
+              <Badge className="mt-2 bg-yellow-500/20 text-yellow-300 text-xs">{dreamStats.topSymbolPercentage || 0}%</Badge>
             </GlassCard>
           </div>
 

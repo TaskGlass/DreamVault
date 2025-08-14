@@ -141,7 +141,7 @@ export default function ProfilePage() {
                 and spiritual preferences
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-4">
               <Button
                 variant="outline"
                 size="sm"
@@ -245,7 +245,7 @@ export default function ProfilePage() {
                     </div>
                     <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
                       <Badge className="bg-purple-500/20 text-purple-200 border-purple-400/30 px-3 py-1 text-sm font-medium">
-                        Dream Explorer
+                        {currentPlan?.plan_name || 'Dream Lite'}
                       </Badge>
                       <Badge className="bg-blue-500/20 text-blue-200 border-blue-400/30 px-3 py-1 text-sm font-medium">
                         {selectedZodiac?.symbol} {selectedZodiac?.name}

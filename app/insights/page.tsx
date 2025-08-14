@@ -6,7 +6,7 @@ import { GlassCard } from "@/components/ui/glass-card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { BarChart3, TrendingUp, Calendar, Heart, Moon, Zap, Eye, Star } from "lucide-react"
+import { BarChart3, TrendingUp, Calendar, Heart, Moon, Zap, Eye, Star, BookOpen } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabaseClient"
 import { useInactivityTimeout } from "@/hooks/use-inactivity-timeout"
@@ -18,7 +18,7 @@ export default function InsightsPage() {
   const [moodData, setMoodData] = useState<any[]>([])
   const [symbolData, setSymbolData] = useState<any[]>([])
   const [weeklyData, setWeeklyData] = useState<any[]>([])
-  const [stats, setStats] = useState({ total: 0, dominantMood: '', topSymbol: '', topSymbolPercentage: 0 })
+  const [stats, setStats] = useState({ total: 0, dominantMood: '', topMoodPercentage: 0, topSymbol: '', topSymbolPercentage: 0 })
 
   // Initialize inactivity timeout (3 minutes)
   useInactivityTimeout(3)
@@ -69,14 +69,17 @@ export default function InsightsPage() {
       setWeeklyData(weekArr)
       // Stats
       const dominantMood = moodArr.sort((a, b) => b.count - a.count)[0]?.mood || ''
+      const topMoodPercentage = moodArr.sort((a, b) => b.count - a.count)[0]?.percentage || 0
       const topSymbolData = symbolArr.sort((a, b) => b.count - a.count)[0]
       const rawTopSymbol = topSymbolData?.symbol || ''
-      // Truncate top symbol to 1-2 words max
-      const topSymbol = rawTopSymbol.split(' ').slice(0, 2).join(' ')
+      // Get the most meaningful word from the top symbol (skip articles like "the", "a", "an")
+      const words = rawTopSymbol.split(' ')
+      const meaningfulWords = words.filter(word => !['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'].includes(word.toLowerCase()))
+      const topSymbol = meaningfulWords[0] || words[0] || ''
       const topSymbolPercentage = topSymbolData && dreams && dreams.length > 0 
         ? Math.round((topSymbolData.count / dreams.length) * 100) 
         : 0
-      setStats({ total: dreams?.length || 0, dominantMood, topSymbol, topSymbolPercentage })
+      setStats({ total: dreams?.length || 0, dominantMood, topMoodPercentage, topSymbol, topSymbolPercentage })
     }
     fetchDreams()
   }, [timeRange])
@@ -127,34 +130,23 @@ export default function InsightsPage() {
           {/* Key Metrics */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <GlassCard className="text-center">
-              <Moon className="h-8 w-8 text-blue-400 mx-auto mb-3" />
+              <BookOpen className="h-6 w-6 text-purple-400 mx-auto mb-2" />
               <p className="text-2xl font-bold">{stats.total}</p>
               <p className="text-sm text-gray-400">Total Dreams</p>
-              <div className="flex items-center justify-center mt-2">
-                <TrendingUp className="h-3 w-3 text-green-400 mr-1" />
-                <span className="text-xs text-green-400">+12%</span>
-              </div>
             </GlassCard>
-
             <GlassCard className="text-center">
-              <Calendar className="h-8 w-8 text-purple-400 mx-auto mb-3" />
-              <p className="text-2xl font-bold">3.5</p>
-              <p className="text-sm text-gray-400">Dreams/Week</p>
-              <div className="flex items-center justify-center mt-2">
-                <TrendingUp className="h-3 w-3 text-green-400 mr-1" />
-                <span className="text-xs text-green-400">+8%</span>
-              </div>
+              <Calendar className="h-6 w-6 text-blue-400 mx-auto mb-2" />
+              <p className="text-2xl font-bold">{dreams.filter(d => new Date(d.date).getMonth() === new Date().getMonth()).length}</p>
+              <p className="text-sm text-gray-400">This Month</p>
             </GlassCard>
-
             <GlassCard className="text-center">
-              <Heart className="h-8 w-8 text-pink-400 mx-auto mb-3" />
+              <Heart className="h-6 w-6 text-pink-400 mx-auto mb-2" />
               <p className="text-2xl font-bold">{stats.dominantMood}</p>
-              <p className="text-sm text-gray-400">Dominant Mood</p>
-              <Badge className="mt-2 bg-blue-500/20 text-blue-300 text-xs">35%</Badge>
+              <p className="text-sm text-gray-400">Top Mood</p>
+              <Badge className="mt-2 bg-pink-500/20 text-pink-300 text-xs">{stats.topMoodPercentage || 0}%</Badge>
             </GlassCard>
-
             <GlassCard className="text-center">
-              <Zap className="h-8 w-8 text-yellow-400 mx-auto mb-3" />
+              <Zap className="h-6 w-6 text-yellow-400 mx-auto mb-2" />
               <p className="text-2xl font-bold">{stats.topSymbol}</p>
               <p className="text-sm text-gray-400">Top Symbol</p>
               <Badge className="mt-2 bg-yellow-500/20 text-yellow-300 text-xs">
