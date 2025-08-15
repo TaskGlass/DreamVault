@@ -16,13 +16,19 @@ const PRICE_IDS: Record<string, Record<string, string>> = {
 }
 
 export async function POST(req: NextRequest) {
-  const { email, plan, billingCycle = 'monthly' } = await req.json()
+  const { email, plan, billingCycle = 'monthly', returnUrl } = await req.json()
   if (!plan || !billingCycle || !PRICE_IDS[plan]?.[billingCycle]) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   }
 
   // Create Stripe Checkout session
   const origin = req.headers.get('origin') || 'http://localhost:3000'
+  
+  // Use returnUrl for cancel_url so users return to where they started
+  const cancelUrl = returnUrl 
+    ? `${origin}${returnUrl}`
+    : `${origin}/dashboard`
+  
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
     mode: 'subscription',
@@ -33,9 +39,9 @@ export async function POST(req: NextRequest) {
         quantity: 1,
       },
     ],
-    success_url: `${origin}/home?checkout=success`,
-    cancel_url: `${origin}/home?checkout=cancel`,
-    metadata: { plan, billingCycle },
+    success_url: `${origin}/dashboard?checkout=success`,
+    cancel_url: cancelUrl, // This is what Stripe uses for the back button
+    metadata: { plan, billingCycle, returnUrl },
   })
 
   return NextResponse.json({ url: session.url })

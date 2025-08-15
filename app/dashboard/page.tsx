@@ -164,10 +164,18 @@ export default function DashboardPage() {
         router.push('/sign-in')
         return
       }
+      
+      // Capture the current page URL to return to after checkout
+      const currentPage = window.location.pathname
+      
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: user.email, plan })
+        body: JSON.stringify({ 
+          email: user.email, 
+          plan,
+          returnUrl: currentPage 
+        })
       })
       const data = await res.json()
       if (data?.url) window.location.href = data.url
