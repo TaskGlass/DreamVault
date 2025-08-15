@@ -725,7 +725,7 @@ export default function DashboardPage() {
                     }
                   }}
                   maxLength={500}
-                  className="min-h-24 sm:min-h-32 bg-white/5 border-white/10 resize-none"
+                  className="min-h-32 sm:min-h-48 bg-white/5 border-white/10 resize-none"
                 />
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-4 gap-2 sm:gap-0">
                   <p className={`text-base ${
@@ -825,35 +825,35 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
                   <Button
                     variant="outline"
-                    className="w-full h-16 sm:h-20 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 border-white/20 p-2"
+                    className="w-full h-24 sm:h-28 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 border-white/20 p-2"
                     onClick={() => navigateToPage("/journal")}
                   >
-                    <Plus className="h-6 w-6 mb-1 text-purple-400" />
-                    <span className="text-sm">New Entry</span>
+                    <Plus className="h-8 w-8 mb-2 text-purple-400" />
+                    <span className="text-base">New Entry</span>
                   </Button>
                   <Button
                     variant="outline"
-                    className="w-full h-16 sm:h-20 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 border-white/20 p-2"
+                    className="w-full h-24 sm:h-28 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 border-white/20 p-2"
                     onClick={() => navigateToPage("/insights")}
                   >
-                    <BarChart3 className="h-6 w-6 mb-1 text-blue-400" />
-                    <span className="text-sm">View Insights</span>
+                    <BarChart3 className="h-8 w-8 mb-2 text-blue-400" />
+                    <span className="text-base">View Insights</span>
                   </Button>
                   <Button
                     variant="outline"
-                    className="w-full h-16 sm:h-20 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 border-white/20 p-2"
+                    className="w-full h-24 sm:h-28 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 border-white/20 p-2"
                     onClick={() => navigateToPage("/readings")}
                   >
-                    <Shuffle className="h-6 w-6 mb-1 text-pink-400" />
-                    <span className="text-sm">Tarot Reading</span>
+                    <Shuffle className="h-8 w-8 mb-2 text-pink-400" />
+                    <span className="text-base">Tarot Reading</span>
                   </Button>
                   <Button
                     variant="outline"
-                    className="w-full h-16 sm:h-20 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 border-white/20 p-2"
+                    className="w-full h-24 sm:h-28 flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 border-white/20 p-2"
                     onClick={() => navigateToPage("/readings")}
                   >
-                    <Eye className="h-6 w-6 mb-1 text-green-400" />
-                    <span className="text-sm">Affirmations</span>
+                    <Eye className="h-8 w-8 mb-2 text-green-400" />
+                    <span className="text-base">Affirmations</span>
                   </Button>
                 </div>
               </GlassCard>
@@ -881,67 +881,70 @@ export default function DashboardPage() {
                   {recentDreams.map((dream) => (
                     <div
                       key={dream.id}
-                      className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors gap-2 sm:gap-0"
+                      className="flex flex-col gap-3 p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
                     >
-                      <div className="flex-1 min-w-0 cursor-pointer" onClick={() => navigateToPage("/journal")}>
-                        <h3 className="text-base sm:text-lg font-medium truncate">{dream.title}</h3>
-                        <p className="text-sm sm:text-base text-gray-400">
-                          {new Date(dream.date).toLocaleDateString()}
-                        </p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {dream.symbols.slice(0, 2).map((symbol: string, index: number) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {symbol}
-                            </Badge>
-                          ))}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => navigateToPage("/journal")}>
+                          <h3 className="text-lg font-medium text-gray-100 mb-1">{dream.title}</h3>
+                          <p className="text-sm text-gray-400 mb-3">
+                            {new Date(dream.date).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <Badge
+                            className={`${moodColors[dream.mood as keyof typeof moodColors] || "bg-gray-500/20"}`}
+                          >
+                            {dream.mood}
+                          </Badge>
+                          <AlertDialog>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 hover:bg-white/10"
+                                  disabled={deletingDreams.has(dream.id)}
+                                >
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <AlertDialogTrigger asChild>
+                                  <DropdownMenuItem className="text-red-400 cursor-pointer">
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete Dream
+                                  </DropdownMenuItem>
+                                </AlertDialogTrigger>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Dream</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete "{dream.title}"? This action cannot be undone and will permanently remove this dream from your journal.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => deleteDream(dream.id, dream.title)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                  disabled={deletingDreams.has(dream.id)}
+                                >
+                                  {deletingDreams.has(dream.id) ? "Deleting..." : "Delete"}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <Badge
-                          className={`${moodColors[dream.mood as keyof typeof moodColors] || "bg-gray-500/20"}`}
-                        >
-                          {dream.mood}
-                        </Badge>
-                        <AlertDialog>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 hover:bg-white/10"
-                                disabled={deletingDreams.has(dream.id)}
-                              >
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <AlertDialogTrigger asChild>
-                                <DropdownMenuItem className="text-red-400 cursor-pointer">
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Delete Dream
-                                </DropdownMenuItem>
-                              </AlertDialogTrigger>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Dream</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete "{dream.title}"? This action cannot be undone and will permanently remove this dream from your journal.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => deleteDream(dream.id, dream.title)}
-                                className="bg-red-600 hover:bg-red-700"
-                                disabled={deletingDreams.has(dream.id)}
-                              >
-                                {deletingDreams.has(dream.id) ? "Deleting..." : "Delete"}
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                      
+                      <div className="flex flex-wrap gap-2">
+                        {dream.symbols?.slice(0, 3).map((symbol: string, index: number) => (
+                          <Badge key={index} variant="secondary" className="bg-purple-500/20 text-purple-200 border-purple-500/30">
+                            {symbol}
+                          </Badge>
+                        ))}
                       </div>
                     </div>
                   ))}

@@ -381,9 +381,67 @@ export default function ReadingsPage() {
       const user = (await supabase.auth.getUser()).data.user
       if (!user) return
       
+      // First, check if we already have a horoscope for today from the dashboard
+      const today = new Date().toISOString().split('T')[0]
+      console.log('Checking for horoscope:', { userZodiac, today })
+      
+      const { data: existingHoroscope, error: queryError } = await supabase
+        .from('daily_horoscopes')
+        .select('*')
+        .eq('zodiac_sign', userZodiac)
+        .eq('date', today)
+        .single()
+
+      if (queryError) {
+        console.log('Query error:', queryError)
+      }
+
+      console.log('Existing horoscope found:', existingHoroscope)
+
+      if (existingHoroscope) {
+        // Use existing horoscope from dashboard
+        console.log('Setting horoscope from existing data:', existingHoroscope.content)
+        setHoroscopeData({
+          horoscope: existingHoroscope.content,
+          luckyElement: existingHoroscope.lucky_element,
+          dreamFocus: existingHoroscope.dream_focus
+        })
+        setTodaysHoroscope(existingHoroscope.content)
+        
+        // Set the current horoscope with user's actual data from dashboard
+        const zodiacInfo = getZodiacInfo(userZodiac)
+        setCurrentHoroscope({
+          sign: userZodiac,
+          date: new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
+          symbol: zodiacInfo.symbol,
+          element: zodiacInfo.element,
+          rulingPlanet: zodiacInfo.rulingPlanet,
+          reading: existingHoroscope.content,
+          // Use personalized content based on the actual horoscope
+          love: `Your romantic energy is enhanced by today's cosmic alignment, ${userFirstName || 'dear soul'}. Trust your intuition in matters of the heart and embrace the love that surrounds you.`,
+          career: `Professional opportunities may present themselves today. Your natural abilities shine in collaborative settings, and your ${zodiacInfo.element.toLowerCase()} nature brings unique insights to your work.`, 
+          health: `Focus on balance and listen to your body's wisdom. Gentle movement and mindful breathing support your wellbeing, especially during this ${zodiacInfo.element.toLowerCase()} phase.`,
+          lucky: existingHoroscope.lucky_element,
+          luckyNumbers: generateLuckyNumbers(userZodiac),
+          bestTime: getBestTime(userZodiac),
+          moonPhase: "Current lunar phase supports your spiritual growth and enhances your intuitive abilities.",
+          planetaryInfluence: `${zodiacInfo.rulingPlanet} influences bring enhanced clarity and focus to your path today.`,
+          dreamSymbols: getDreamSymbols(userZodiac),
+          advice: `Trust your ${zodiacInfo.element.toLowerCase()} nature today, ${userFirstName || 'dear soul'}. Pay attention to dreams featuring ${existingHoroscope.dream_focus.toLowerCase()} elements - they carry important messages for your spiritual journey.`,
+        })
+        setLoadingHoroscope(false)
+        return
+      }
+      
+      // If no existing horoscope, try to generate one via API
+      const session = (await supabase.auth.getSession()).data.session
+      
       const response = await fetch('/api/daily-horoscope', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(session ? { Authorization: `Bearer ${session.access_token}` } : {})
+        },
         body: JSON.stringify({ 
           zodiacSign: userZodiac,
           userId: user.id,
@@ -392,11 +450,14 @@ export default function ReadingsPage() {
       })
       
       const result = await response.json()
+      console.log('API horoscope result:', result)
+      
       if (result.horoscope) {
+        console.log('Setting horoscope from API:', result.horoscope)
         setHoroscopeData(result)
         setTodaysHoroscope(result.horoscope)
         
-        // Set the current horoscope with user's actual data
+        // Set the current horoscope with user's actual data from API
         const zodiacInfo = getZodiacInfo(userZodiac)
         setCurrentHoroscope({
           sign: userZodiac,
@@ -405,16 +466,17 @@ export default function ReadingsPage() {
           element: zodiacInfo.element,
           rulingPlanet: zodiacInfo.rulingPlanet,
           reading: result.horoscope,
-          love: "Your romantic energy is enhanced by today's cosmic alignment. Trust your intuition in matters of the heart.",
-          career: "Professional opportunities may present themselves today. Your natural abilities shine in collaborative settings.", 
-          health: "Focus on balance and listen to your body's wisdom. Gentle movement and mindful breathing support your wellbeing.",
+          // Use personalized content based on the actual horoscope
+          love: `Your romantic energy is enhanced by today's cosmic alignment, ${userFirstName || 'dear soul'}. Trust your intuition in matters of the heart and embrace the love that surrounds you.`,
+          career: `Professional opportunities may present themselves today. Your natural abilities shine in collaborative settings, and your ${zodiacInfo.element.toLowerCase()} nature brings unique insights to your work.`, 
+          health: `Focus on balance and listen to your body's wisdom. Gentle movement and mindful breathing support your wellbeing, especially during this ${zodiacInfo.element.toLowerCase()} phase.`,
           lucky: result.luckyElement,
           luckyNumbers: generateLuckyNumbers(userZodiac),
           bestTime: getBestTime(userZodiac),
-          moonPhase: "Current lunar phase supports your spiritual growth",
-          planetaryInfluence: `${zodiacInfo.rulingPlanet} influences bring enhanced clarity and focus to your path.`,
+          moonPhase: "Current lunar phase supports your spiritual growth and enhances your intuitive abilities.",
+          planetaryInfluence: `${zodiacInfo.rulingPlanet} influences bring enhanced clarity and focus to your path today.`,
           dreamSymbols: getDreamSymbols(userZodiac),
-          advice: `Trust your ${zodiacInfo.element.toLowerCase()} nature today. Pay attention to dreams featuring ${result.dreamFocus.toLowerCase()} elements - they carry important messages for your spiritual journey.`,
+          advice: `Trust your ${zodiacInfo.element.toLowerCase()} nature today, ${userFirstName || 'dear soul'}. Pay attention to dreams featuring ${result.dreamFocus.toLowerCase()} elements - they carry important messages for your spiritual journey.`,
         })
       }
     } catch (error) {
@@ -624,24 +686,18 @@ export default function ReadingsPage() {
                 Your Horoscope
               </h2>
 
-            {loadingHoroscope ? (
-              <div className="text-center py-8">
-                <div className="animate-spin text-4xl mb-4">⭐</div>
-                <p className="text-gray-300">Loading your personalized horoscope...</p>
-              </div>
-            ) : currentHoroscope ? (
               <div className="space-y-6">
                 {/* Header Section */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <div className="text-4xl mr-4">{currentHoroscope.symbol}</div>
+                    <div className="text-4xl mr-4">{currentHoroscope?.symbol}</div>
                     <div>
-                      <h3 className="text-2xl font-bold text-yellow-300">{currentHoroscope.sign}</h3>
-                      <p className="text-sm text-gray-400">{currentHoroscope.date}</p>
+                      <h3 className="text-2xl font-bold text-yellow-300">{currentHoroscope?.sign}</h3>
+                      <p className="text-sm text-gray-400">{currentHoroscope?.date}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge className="bg-orange-500/20 text-orange-300">{currentHoroscope.element} Sign</Badge>
+                        <Badge className="bg-orange-500/20 text-orange-300">{currentHoroscope?.element} Sign</Badge>
                         <Badge className="bg-yellow-500/20 text-yellow-300">
-                          Ruled by {currentHoroscope.rulingPlanet}
+                          Ruled by {currentHoroscope?.rulingPlanet}
                         </Badge>
                       </div>
                     </div>
@@ -654,27 +710,35 @@ export default function ReadingsPage() {
                     <Star className="h-4 w-4 mr-2" />
                     Daily Overview
                   </h4>
-                  {(() => {
-                    const parts = todaysHoroscope.split('\n\nCosmic tip:')
-                    const mainReading = parts[0]
-                    const cosmicTip = parts[1]
-                    
-                    return (
-                      <div className="space-y-4">
-                        <p className="text-gray-300 leading-relaxed">
-                          {mainReading}
-                        </p>
-                        {cosmicTip && (
-                          <div className="border-t border-white/10 pt-3">
-                            <p className="text-sm font-medium text-yellow-300 mb-2">✨ Cosmic tip:</p>
-                            <p className="text-sm text-gray-300 italic leading-relaxed">
-                              {cosmicTip.trim()}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })()}
+                  {loadingHoroscope ? (
+                    <p className="text-gray-300 leading-relaxed">Loading your personalized horoscope...</p>
+                  ) : todaysHoroscope ? (
+                    (() => {
+                      const parts = todaysHoroscope.split('\n\nCosmic tip:')
+                      const mainReading = parts[0]
+                      const cosmicTip = parts[1]
+                      
+                      return (
+                        <div className="space-y-4">
+                          <p className="text-gray-300 leading-relaxed">
+                            {mainReading}
+                          </p>
+                          {cosmicTip && (
+                            <div className="border-t border-white/10 pt-3">
+                              <p className="text-sm font-medium text-yellow-300 mb-2">✨ Cosmic tip:</p>
+                              <p className="text-sm text-gray-300 italic leading-relaxed">
+                                {cosmicTip.trim()}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })()
+                  ) : (
+                    <p className="text-gray-300 leading-relaxed">
+                      {currentHoroscope?.reading || `Welcome, ${userFirstName || 'dear soul'}! Your daily horoscope will appear here once generated. The cosmic energies are aligning to bring you insights and guidance for your journey.`}
+                    </p>
+                  )}
                 </div>
 
                 {/* Life Areas Grid */}
@@ -684,7 +748,9 @@ export default function ReadingsPage() {
                       <Heart className="h-4 w-4 mr-2" />
                       Love & Relationships
                     </h5>
-                    <p className="text-xs md:text-sm text-gray-300 leading-relaxed">{currentHoroscope.love}</p>
+                    <p className="text-xs md:text-sm text-gray-300 leading-relaxed">
+                      {currentHoroscope?.love || `Your romantic energy is enhanced by today's cosmic alignment, ${userFirstName || 'dear soul'}. Trust your intuition in matters of the heart and embrace the love that surrounds you.`}
+                    </p>
                   </div>
 
                   <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-lg p-4">
@@ -692,7 +758,9 @@ export default function ReadingsPage() {
                       <Star className="h-4 w-4 mr-2" />
                       Career & Finance
                     </h5>
-                    <p className="text-xs md:text-sm text-gray-300 leading-relaxed">{currentHoroscope.career}</p>
+                    <p className="text-xs md:text-sm text-gray-300 leading-relaxed">
+                      {currentHoroscope?.career || `Professional opportunities may present themselves today, ${userFirstName || 'dear soul'}. Your natural abilities shine in collaborative settings, and your ${getZodiacInfo(userZodiac).element.toLowerCase()} nature brings unique insights to your work.`}
+                    </p>
                   </div>
 
                   <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-lg p-4">
@@ -700,7 +768,9 @@ export default function ReadingsPage() {
                       <Heart className="h-4 w-4 mr-2" />
                       Health & Wellness
                     </h5>
-                    <p className="text-xs md:text-sm text-gray-300 leading-relaxed">{currentHoroscope.health}</p>
+                    <p className="text-xs md:text-sm text-gray-300 leading-relaxed">
+                      {currentHoroscope?.health || `Focus on balance and listen to your body's wisdom, ${userFirstName || 'dear soul'}. Gentle movement and mindful breathing support your wellbeing, especially during this ${getZodiacInfo(userZodiac).element.toLowerCase()} phase.`}
+                    </p>
                   </div>
                 </div>
 
@@ -711,15 +781,15 @@ export default function ReadingsPage() {
                     <div className="space-y-2 text-sm md:text-base">
                       <div className="flex justify-between">
                         <span className="text-gray-400">Color:</span>
-                        <span className="text-yellow-300">{currentHoroscope?.lucky || 'Unknown'}</span>
+                        <span className="text-yellow-300">{currentHoroscope?.lucky || "Spirit"}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Numbers:</span>
-                        <span className="text-yellow-300">{currentHoroscope?.luckyNumbers?.join(", ") || 'Unknown'}</span>
+                        <span className="text-yellow-300">{currentHoroscope?.luckyNumbers?.join(", ") || generateLuckyNumbers(userZodiac).join(", ")}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Best Time:</span>
-                        <span className="text-yellow-300">{currentHoroscope?.bestTime || 'Unknown'}</span>
+                        <span className="text-yellow-300">{currentHoroscope?.bestTime || getBestTime(userZodiac)}</span>
                       </div>
                     </div>
                   </div>
@@ -729,11 +799,11 @@ export default function ReadingsPage() {
                     <div className="space-y-2 text-sm md:text-base">
                       <div>
                         <span className="text-gray-400">Moon Phase:</span>
-                        <p className="text-indigo-300 text-xs md:text-sm">{currentHoroscope?.moonPhase || 'Unknown'}</p>
+                        <p className="text-indigo-300 text-xs md:text-sm">{currentHoroscope?.moonPhase || "Current lunar phase supports your spiritual growth"}</p>
                       </div>
                       <div>
                         <span className="text-gray-400">Planetary Energy:</span>
-                        <p className="text-indigo-300 text-xs md:text-sm">{currentHoroscope?.planetaryInfluence || 'Unknown'}</p>
+                        <p className="text-indigo-300 text-xs md:text-sm">{currentHoroscope?.planetaryInfluence || `${getZodiacInfo(userZodiac).rulingPlanet} influences bring enhanced clarity and focus to your path.`}</p>
                       </div>
                     </div>
                   </div>
@@ -746,11 +816,11 @@ export default function ReadingsPage() {
                     Dream Symbols to Watch For
                   </h5>
                   <div className="flex flex-wrap gap-2 mb-3">
-                    {currentHoroscope?.dreamSymbols?.map((symbol: string, index: number) => (
+                    {(currentHoroscope?.dreamSymbols || getDreamSymbols(userZodiac)).map((symbol: string, index: number) => (
                       <Badge key={index} className="bg-purple-500/20 text-purple-200 text-xs md:text-sm">
                         {symbol}
                       </Badge>
-                    )) || []}
+                    ))}
                   </div>
                   <p className="text-xs md:text-sm text-gray-300 leading-relaxed">
                     These symbols in your dreams carry special significance for your sign today. Pay attention to their
@@ -764,25 +834,25 @@ export default function ReadingsPage() {
                     <Sparkles className="h-4 w-4 mr-2" />
                     Cosmic Guidance
                   </h4>
-                  <p className="text-sm md:text-base text-gray-300 leading-relaxed">{currentHoroscope.advice}</p>
+                  <p className="text-sm md:text-base text-gray-300 leading-relaxed">
+                    {currentHoroscope?.advice || `Trust your ${getZodiacInfo(userZodiac).element.toLowerCase()} nature today, ${userFirstName || 'dear soul'}. Pay attention to dreams featuring spiritual elements - they carry important messages for your spiritual journey.`}
+                  </p>
                 </div>
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <div className="text-4xl mb-4">⭐</div>
-                <p className="text-gray-300 mb-4">Your daily horoscope will appear here once generated.</p>
-                {userZodiac && (
-                  <Button 
-                    onClick={getHoroscope}
-                    className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700"
-                  >
-                    <Star className="h-4 w-4 mr-2" />
-                    Generate Horoscope
-                  </Button>
+
+                {/* Check for Existing Horoscope Button */}
+                {!currentHoroscope && userZodiac && (
+                  <div className="text-center pt-4">
+                    <Button 
+                      onClick={getHoroscope}
+                      className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700"
+                    >
+                      <Star className="h-4 w-4 mr-2" />
+                      Check for Today's Horoscope
+                    </Button>
+                  </div>
                 )}
               </div>
-            )}
-          </GlassCard>
+            </GlassCard>
           </div>
 
           {/* Moon Phase */}
@@ -793,21 +863,21 @@ export default function ReadingsPage() {
                 Current Moon Phase
               </h2>
 
-            <div className="text-center py-8">
-              <div className="text-6xl mb-4">🌙</div>
-              <h3 className="text-xl font-semibold text-blue-300 mb-2">Waning Crescent</h3>
-              <p className="text-gray-300 mb-4">
-                The moon is in its waning crescent phase, a time for release, reflection, and letting go. This is an
-                ideal period for clearing negative energy and preparing for new beginnings.
-              </p>
-              <div className="bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-lg p-4">
-                <h4 className="font-medium text-blue-300 mb-2">Moon Energy</h4>
-                <p className="text-sm text-gray-300">
-                  Focus on releasing what no longer serves you and trust in the natural cycles of renewal.
+              <div className="text-center py-8">
+                <div className="text-6xl mb-4">🌙</div>
+                <h3 className="text-xl font-semibold text-blue-300 mb-2">Waning Crescent</h3>
+                <p className="text-gray-300 mb-4">
+                  The moon is in its waning crescent phase, a time for release, reflection, and letting go. This is an
+                  ideal period for clearing negative energy and preparing for new beginnings.
                 </p>
+                <div className="bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-lg p-4">
+                  <h4 className="font-medium text-blue-300 mb-2">Moon Energy</h4>
+                  <p className="text-sm text-gray-300">
+                    Focus on releasing what no longer serves you and trust in the natural cycles of renewal.
+                  </p>
+                </div>
               </div>
-            </div>
-          </GlassCard>
+            </GlassCard>
           </div>
 
           {/* Daily Affirmation */}
@@ -818,16 +888,16 @@ export default function ReadingsPage() {
                 Daily Affirmation
               </h2>
 
-            <div className="text-center py-8">
-              <div className="text-4xl mb-4">✨</div>
-              <blockquote className="text-lg font-medium text-purple-300 mb-4">
-                "I trust my inner wisdom and embrace the messages my dreams bring to my conscious mind."
-              </blockquote>
-              <p className="text-sm text-gray-400">
-                Repeat this affirmation throughout your day to strengthen your connection to your subconscious mind.
-              </p>
-            </div>
-          </GlassCard>
+              <div className="text-center py-8">
+                <div className="text-4xl mb-4">✨</div>
+                <blockquote className="text-lg font-medium text-purple-300 mb-4">
+                  "I trust my inner wisdom and embrace the messages my dreams bring to my conscious mind."
+                </blockquote>
+                <p className="text-sm text-gray-400">
+                  Repeat this affirmation throughout your day to strengthen your connection to your subconscious mind.
+                </p>
+              </div>
+            </GlassCard>
           </div>
 
           {/* Zodiac Quick Reference */}
@@ -857,3 +927,4 @@ export default function ReadingsPage() {
     </div>
   )
 }
+
