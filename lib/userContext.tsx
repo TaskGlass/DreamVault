@@ -1,7 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { supabase } from './supabaseClient'
+import { createClientSupabase } from './supabaseClient'
 
 interface UserProfile {
   id: string
@@ -79,6 +79,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     if (!force && isCacheValid('profile') && profile) return
 
     try {
+      const supabase = createClientSupabase()
       const user = (await supabase.auth.getUser()).data.user
       if (!user) return
 
@@ -107,6 +108,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     if (!force && isCacheValid('dreams') && dreams.length > 0) return
 
     try {
+      const supabase = createClientSupabase()
       const user = (await supabase.auth.getUser()).data.user
       if (!user) return
 
@@ -129,6 +131,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     if (!force && isCacheValid('subscription') && subscription) return
 
     try {
+      const supabase = createClientSupabase()
       const user = (await supabase.auth.getUser()).data.user
       if (!user) return
 
@@ -169,6 +172,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const addDream = async (dreamData: Omit<Dream, 'id' | 'user_id'>) => {
     try {
+      const supabase = createClientSupabase()
       const user = (await supabase.auth.getUser()).data.user
       if (!user) return
 
@@ -192,6 +196,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const updateDream = async (dreamId: string, updates: Partial<Dream>) => {
     try {
+      const supabase = createClientSupabase()
       const { data: updatedDream, error } = await supabase
         .from('dreams')
         .update(updates)
@@ -215,6 +220,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const deleteDream = async (dreamId: string) => {
     try {
+      const supabase = createClientSupabase()
       const { error } = await supabase
         .from('dreams')
         .delete()
@@ -247,6 +253,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   // Listen for auth state changes
   useEffect(() => {
+    const supabase = createClientSupabase()
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN' && session?.user) {

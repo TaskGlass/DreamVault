@@ -2,6 +2,9 @@ import { openai } from "@ai-sdk/openai"
 import { streamText } from "ai"
 import { createServerSupabase } from "@/lib/supabaseServer"
 import { checkAndConsumeUsage } from "@/lib/subscription"
+import { checkRateLimit, getRateLimitHeaders } from "@/lib/rateLimit"
+import { validateInput, chatMessageSchema } from "@/lib/validation"
+import { logSecurityEvent, sanitizeInput } from "@/lib/security"
 
 export const maxDuration = 30
 
@@ -10,9 +13,25 @@ export async function POST(req: Request) {
     const supabase = createServerSupabase(req)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
+      logSecurityEvent('UNAUTHORIZED_ACCESS', { path: '/api/chat' }, req as any)
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
+      })
+    }
+
+    // Rate limiting
+    const rateLimitKey = `chat:${user.id}`
+    const rateLimitAllowed = checkRateLimit(rateLimitKey, 10, 60 * 1000) // 10 requests per minute
+    
+    if (!rateLimitAllowed) {
+      logSecurityEvent('RATE_LIMIT_EXCEEDED', { userId: user.id, path: '/api/chat' }, req as any)
+      return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
+        status: 429,
+        headers: { 
+          "Content-Type": "application/json",
+          ...getRateLimitHeaders(rateLimitKey, 10, 60 * 1000)
+        },
       })
     }
 
@@ -28,17 +47,46 @@ export async function POST(req: Request) {
       }), { status: 402, headers: { "Content-Type": "application/json" } })
     }
 
-    const { messages } = await req.json()
-
-    // Check if API key is available
-    if (!process.env.OPENAI_API_KEY) {
-      return new Response(JSON.stringify({ error: "OpenAI API key not configured" }), {
-        status: 401,
+    const body = await req.json()
+    
+    // Input validation
+    const validation = validateInput(chatMessageSchema, body)
+    if (!validation.success) {
+      logSecurityEvent('INVALID_INPUT', { 
+        userId: user.id, 
+        errors: validation.errors,
+        path: '/api/chat' 
+      }, req as any)
+      return new Response(JSON.stringify({ 
+        error: "Invalid input", 
+        details: validation.errors 
+      }), {
+        status: 400,
         headers: { "Content-Type": "application/json" },
       })
     }
 
-    console.log("Processing dream interpretation request...")
+    const { messages } = validation.data
+
+    // Sanitize message content
+    const sanitizedMessages = messages.map(msg => ({
+      ...msg,
+      content: sanitizeInput(msg.content)
+    }))
+
+    // Check if API key is available
+    if (!process.env.OPENAI_API_KEY) {
+      logSecurityEvent('MISSING_API_KEY', { path: '/api/chat' }, req as any)
+      return new Response(JSON.stringify({ error: "OpenAI API key not configured" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      })
+    }
+
+    logSecurityEvent('DREAM_INTERPRETATION_REQUEST', { 
+      userId: user.id, 
+      messageCount: messages.length 
+    }, req as any)
 
     const result = streamText({
       model: openai("gpt-4o"),
@@ -81,13 +129,17 @@ export async function POST(req: Request) {
           • Draw connections between symbols and the dreamer's life journey, inner world, and spiritual path
           • Never use dashes or hyphens in your responses, use colons or commas instead`,
         },
-        ...messages,
+        ...sanitizedMessages,
       ],
     })
 
     return result.toTextStreamResponse()
   } catch (error) {
     console.error("Error in chat API:", error)
+    logSecurityEvent('API_ERROR', { 
+      path: '/api/chat', 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    }, req as any)
     return new Response(JSON.stringify({ error: "Failed to process dream interpretation" }), {
       status: 500,
       headers: { "Content-Type": "application/json" },

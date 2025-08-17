@@ -1,20 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabaseServer'
 import { checkAndConsumeUsage } from '@/lib/subscription'
+import { checkRateLimit, getRateLimitHeaders } from '@/lib/rateLimit'
+import { validateInput, horoscopeSchema } from '@/lib/validation'
+import { logSecurityEvent, sanitizeInput } from '@/lib/security'
 
 export async function POST(req: NextRequest) {
-  const supabase = createServerSupabase(req)
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const { zodiacSign, forceRefresh, firstName } = await req.json()
-  if (!zodiacSign) {
-    return NextResponse.json({ error: 'Zodiac sign is required' }, { status: 400 })
-  }
-
-  const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
-
   try {
+    const supabase = createServerSupabase(req)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      logSecurityEvent('UNAUTHORIZED_ACCESS', { path: '/api/daily-horoscope' }, req as any)
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Rate limiting
+    const rateLimitKey = `horoscope:${user.id}`
+    const rateLimitAllowed = checkRateLimit(rateLimitKey, 5, 60 * 1000) // 5 requests per minute
+    
+    if (!rateLimitAllowed) {
+      logSecurityEvent('RATE_LIMIT_EXCEEDED', { userId: user.id, path: '/api/daily-horoscope' }, req as any)
+      return NextResponse.json({ error: "Rate limit exceeded. Please try again later." }, { 
+        status: 429,
+        headers: getRateLimitHeaders(rateLimitKey, 5, 60 * 1000)
+      })
+    }
+
+    const body = await req.json()
+    
+    // Input validation
+    const validation = validateInput(horoscopeSchema, body)
+    if (!validation.success) {
+      logSecurityEvent('INVALID_INPUT', { 
+        userId: user.id, 
+        errors: validation.errors,
+        path: '/api/daily-horoscope' 
+      }, req as any)
+      return NextResponse.json({ 
+        error: 'Invalid input', 
+        details: validation.errors 
+      }, { status: 400 })
+    }
+
+    const { zodiacSign, forceRefresh, firstName } = validation.data
+
+    const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+
     // If forceRefresh is true, delete existing horoscope first
     if (forceRefresh) {
       const { error: deleteError } = await supabase
@@ -52,7 +83,7 @@ export async function POST(req: NextRequest) {
 Requirements:
 - Write in plain text with NO markdown, asterisks, or special formatting
 - 4-6 sentences for the main reading, then add a "Cosmic tip:" with a philosophical quote
-- Address the person by their first name "${firstName || 'dear soul'}" instead of their zodiac sign
+- Address the person by their first name "${sanitizeInput(firstName || 'dear soul')}" instead of their zodiac sign
 - Include specific, relatable activities and advice (like spending time in nature, creative pursuits, relationships, diet, mindfulness)
 - Blend practical life advice with spiritual/cosmic insights
 - Use poetic, metaphorical language ("inner chi", "soul's compass", "energy flows")
@@ -61,7 +92,7 @@ Requirements:
 - End with "Cosmic tip: [inspirational quote or wisdom]"
 - Keep the tone warm, mystical, and uplifting like a wise friend giving guidance
 
-Example style: "Spend some extra time cuddling with your pets today, ${firstName || 'dear soul'}. And for those whose pets have transitioned to happier playgrounds, your beloved four-legged bundles of joy send you love across the realms. This is also a cue for those considering a switch in their diet to a vegetarian or more conscious one, perhaps give it a short run to see if it is for keeps. On another note, the more you think of vibrant thoughts, the more you attract happier thoughts and experiences in your life. You are immensely gifted, ${firstName || 'dear soul'}, and you must remember that at every given step in time. Let your popcorn brain rest a while, and allow your inner chi to flow in the direction of your soul.
+Example style: "Spend some extra time cuddling with your pets today, ${sanitizeInput(firstName || 'dear soul')}. And for those whose pets have transitioned to happier playgrounds, your beloved four-legged bundles of joy send you love across the realms. This is also a cue for those considering a switch in their diet to a vegetarian or more conscious one, perhaps give it a short run to see if it is for keeps. On another note, the more you think of vibrant thoughts, the more you attract happier thoughts and experiences in your life. You are immensely gifted, ${sanitizeInput(firstName || 'dear soul')}, and you must remember that at every given step in time. Let your popcorn brain rest a while, and allow your inner chi to flow in the direction of your soul.
 
 Cosmic tip: You need not always do. Sometimes the best way to do is to be."`
 
@@ -120,6 +151,12 @@ Cosmic tip: You need not always do. Sometimes the best way to do is to be."`
       // Still return the generated horoscope even if saving fails
     }
 
+    logSecurityEvent('HOROSCOPE_GENERATED', { 
+      userId: user.id, 
+      zodiacSign,
+      forceRefresh: !!forceRefresh
+    }, req as any)
+
     return NextResponse.json({ 
       horoscope,
       luckyElement,
@@ -129,6 +166,10 @@ Cosmic tip: You need not always do. Sometimes the best way to do is to be."`
     })
   } catch (error) {
     console.error('Error generating daily horoscope:', error)
+    logSecurityEvent('API_ERROR', { 
+      path: '/api/daily-horoscope', 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    }, req as any)
     return NextResponse.json({ error: 'Failed to generate daily horoscope' }, { status: 500 })
   }
 } 
