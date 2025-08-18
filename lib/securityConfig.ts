@@ -41,7 +41,10 @@ export const SECURITY_CONFIG = {
     'Referrer-Policy': 'strict-origin-when-cross-origin',
     'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
     'X-XSS-Protection': '1; mode=block',
-    'Strict-Transport-Security': 'max-age=31536000; includeSubDomains'
+    'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+    'X-DNS-Prefetch-Control': 'off',
+    'X-Download-Options': 'noopen',
+    'X-Permitted-Cross-Domain-Policies': 'none'
   },
 
   // Request Limits
@@ -74,6 +77,54 @@ export const SECURITY_CONFIG = {
     logAllRequests: true,
     sanitizeInputs: true,
     rateLimitByUser: true
+  },
+
+  // Enhanced Security Features (Optional)
+  enhanced: {
+    enableRequestValidation: process.env.ENABLE_REQUEST_VALIDATION === 'true',
+    enableSecurityAlerts: process.env.ENABLE_SECURITY_ALERTS === 'true',
+    enableEnhancedRateLimiting: process.env.ENABLE_ENHANCED_RATE_LIMITING === 'true',
+    enablePasswordStrengthValidation: process.env.ENABLE_PASSWORD_STRENGTH === 'true',
+    enableSecurityMonitoring: process.env.ENABLE_SECURITY_MONITORING === 'true'
+  },
+
+  // Content Security Policy
+  csp: {
+    enabled: true,
+    directives: {
+      'default-src': ["'self'"],
+      'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://js.stripe.com", "https://checkout.stripe.com"],
+      'style-src': ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      'font-src': ["'self'", "https://fonts.gstatic.com"],
+      'img-src': ["'self'", "data:", "https:", "blob:"],
+      'connect-src': ["'self'", "https://api.openai.com", "https://api.stripe.com", "https://checkout.stripe.com", "https://*.supabase.co"],
+      'frame-src': ["https://js.stripe.com", "https://checkout.stripe.com"],
+      'object-src': ["'none'"],
+      'base-uri': ["'self'"],
+      'form-action': ["'self'"],
+      'upgrade-insecure-requests': []
+    }
+  },
+
+  // Suspicious Activity Detection
+  suspiciousActivity: {
+    enabled: true,
+    suspiciousUserAgents: ['sqlmap', 'nikto', 'nmap', 'scanner', 'bot', 'crawler'],
+    suspiciousHeaders: ['x-forwarded-host', 'x-original-url', 'x-rewrite-url'],
+    maxFailedLogins: 5,
+    maxConcurrentSessions: 3
+  },
+
+  // Security Monitoring
+  monitoring: {
+    enabled: process.env.ENABLE_SECURITY_MONITORING === 'true',
+    alertLevels: {
+      critical: ['MULTIPLE_FAILED_LOGINS', 'SQL_INJECTION_ATTEMPT', 'XSS_ATTEMPT'],
+      high: ['RATE_LIMIT_EXCEEDED', 'UNAUTHORIZED_ACCESS', 'API_ERROR'],
+      medium: ['SUSPICIOUS_REQUEST', 'INVALID_INPUT', 'SLOW_REQUEST'],
+      low: ['LOGIN_ATTEMPT', 'API_CALL', 'USER_ACTION']
+    },
+    retentionDays: 30
   }
 }
 
@@ -88,12 +139,16 @@ export function getSecurityConfig() {
       horoscope: { requests: 50, windowMs: 60 * 1000 }
     }
     config.logging.logLevel = 'debug'
+    config.enhanced.enableSecurityAlerts = true // Enable in dev for testing
   }
   
   if (process.env.NODE_ENV === 'production') {
     config.cors.allowedOrigins = config.cors.allowedOrigins.filter(
       origin => origin !== 'http://localhost:3000'
     )
+    config.enhanced.enableRequestValidation = true
+    config.enhanced.enableEnhancedRateLimiting = true
+    config.enhanced.enablePasswordStrengthValidation = true
   }
   
   return config
@@ -111,4 +166,13 @@ export function isDevelopment() {
 export function getRateLimitConfig(feature: keyof typeof SECURITY_CONFIG.rateLimits) {
   const config = getSecurityConfig()
   return config.rateLimits[feature] || config.rateLimits.default
+}
+
+// Feature flags for gradual rollout
+export const SECURITY_FEATURES = {
+  ENABLE_ENHANCED_SANITIZATION: process.env.ENABLE_ENHANCED_SANITIZATION === 'true',
+  ENABLE_REQUEST_VALIDATION: process.env.ENABLE_REQUEST_VALIDATION === 'true',
+  ENABLE_SECURITY_ALERTS: process.env.ENABLE_SECURITY_ALERTS === 'true',
+  ENABLE_PASSWORD_STRENGTH: process.env.ENABLE_PASSWORD_STRENGTH === 'true',
+  ENABLE_SECURITY_MONITORING: process.env.ENABLE_SECURITY_MONITORING === 'true'
 }

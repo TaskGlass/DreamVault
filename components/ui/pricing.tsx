@@ -30,9 +30,10 @@ const dreamVaultPlans: Plan[] = [
     color: "text-gray-400",
     features: [
       "5 dream interpretations",
-      "5 tarot readings",
+      "30 daily horoscopes",
+      "10 affirmations",
+      "10 moon phases",
       "Basic dream journal",
-      "Save dreams",
       "Community support",
     ],
   },
@@ -46,10 +47,11 @@ const dreamVaultPlans: Plan[] = [
     color: "text-purple-400",
     popular: true,
     features: [
-      "15 dream interpretations",
-      "15 tarot readings",
+      "50 dream interpretations",
+      "30 daily horoscopes",
+      "50 affirmations",
+      "50 moon phases",
       "Advanced mood & emotion insights",
-      "Daily affirmations",
       "Priority email support",
     ],
   },
@@ -62,8 +64,10 @@ const dreamVaultPlans: Plan[] = [
     icon: Crown,
     color: "text-yellow-400",
     features: [
-      "30 dream interpretations",
-      "30 tarot readings",
+      "200 dream interpretations",
+      "30 daily horoscopes",
+      "200 affirmations",
+      "200 moon phases",
       "Weekly dream pattern summaries",
       "Shareable dream reports",
       "Advanced symbol analysis",
@@ -138,77 +142,72 @@ export function Pricing() {
 
       {/* Plans */}
       <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-md md:max-w-6xl mx-auto">
-        {dreamVaultPlans.map((plan) => {
-          const Icon = plan.icon
-          const isFree = plan.monthlyPrice === "Free"
-          const displayPrice = billingCycle === "monthly" ? plan.monthlyPrice : plan.annualPrice
-          return (
-            <div
-              key={plan.name}
-              className={cn(
-                "rounded-2xl p-6 text-left relative flex flex-col h-full border border-white/10 bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-xl shadow-2xl",
-                plan.popular ? "border-purple-500/50 glow" : "",
-              )}
-            >
-              {plan.popular && (
-                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-600">Most Popular</Badge>
-              )}
+        {dreamVaultPlans.map((plan) => (
+          <div
+            key={plan.name}
+            className={cn(
+              "relative p-6 rounded-2xl border transition-all duration-300 hover:scale-105",
+              plan.popular
+                ? "bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-purple-400/30 shadow-xl shadow-purple-500/20"
+                : "bg-white/5 border-white/10 hover:border-white/20"
+            )}
+          >
+            {plan.popular && (
+              <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                Most Popular
+              </Badge>
+            )}
 
-              <div className="flex items-center gap-3 mb-3">
-                <Icon className={cn("h-10 w-10", plan.color)} />
-                <h3 className="text-2xl font-bold">{plan.name}</h3>
+            <div className="text-center mb-6">
+              <div className={cn("w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center", plan.color)}>
+                <plan.icon className="h-8 w-8" />
               </div>
-              <div className="flex items-baseline gap-2 mb-4">
-                <span className="text-3xl font-bold">{displayPrice}</span>
-                <span className="text-sm text-gray-400">{billingCycle === "monthly" ? "/month" : "/year"}</span>
+              <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
+              <div className="mb-2">
+                <span className="text-4xl font-bold text-white">
+                  {billingCycle === "monthly" ? plan.monthlyPrice : plan.annualPrice}
+                </span>
+                {billingCycle === "annual" && plan.annualDisplay && (
+                  <span className="text-gray-400 ml-2">/month</span>
+                )}
               </div>
-              {billingCycle === "annual" && plan.annualDisplay && plan.name !== "Dream Lite" && (
-                <div className="mb-4">
-                  <p className="text-sm text-gray-400">{plan.annualDisplay}</p>
-                  {plan.annualSavings && (
-                    <p className="text-sm text-green-400 font-medium">{plan.annualSavings}</p>
-                  )}
-                </div>
-              )}
-
-              <ul className="space-y-3 mb-6 flex-grow">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-center text-sm text-gray-200">
-                    <Check className="h-4 w-4 text-green-400 mr-2 flex-shrink-0" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              {isFree ? (
-                <Link href="/sign-up" className="mt-auto">
-                  <Button
-                    className={cn(
-                      "w-full",
-                      plan.popular
-                        ? "bg-gradient-to-r from-purple-600 to-blue-600"
-                        : "bg-white/10 hover:bg-white/20",
-                    )}
-                  >
-                    Interpret Dream
-                  </Button>
-                </Link>
-              ) : (
-                <Button
-                  onClick={() => handleChoosePlan(plan.name)}
-                  className={cn(
-                    "w-full mt-auto",
-                    plan.popular
-                      ? "bg-gradient-to-r from-purple-600 to-blue-600"
-                      : "bg-white/10 hover:bg-white/20",
-                  )}
-                >
-                  Choose Plan
-                </Button>
+              {billingCycle === "annual" && plan.annualSavings && (
+                <p className="text-green-400 text-sm font-medium">{plan.annualSavings}</p>
               )}
             </div>
-          )
-        })}
+
+            <ul className="space-y-3 mb-8">
+              {plan.features.map((feature, index) => (
+                <li key={index} className="flex items-start">
+                  <Check className="h-5 w-5 text-green-400 mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-gray-300 text-sm">{feature}</span>
+                </li>
+              ))}
+            </ul>
+
+            <Button
+              onClick={() => handleChoosePlan(plan.name)}
+              className={cn(
+                "w-full py-3 font-semibold transition-all duration-300",
+                plan.popular
+                  ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg"
+                  : "bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/30"
+              )}
+            >
+              {plan.name === "Dream Lite" ? "Get Started Free" : `Choose ${plan.name}`}
+            </Button>
+          </div>
+        ))}
+      </div>
+
+      {/* Additional Info */}
+      <div className="text-center mt-12">
+        <p className="text-gray-400 text-sm mb-4">
+          All plans include secure payment processing via Stripe
+        </p>
+        <p className="text-gray-500 text-xs">
+          Cancel anytime. No hidden fees. 30-day money-back guarantee.
+        </p>
       </div>
     </div>
   )

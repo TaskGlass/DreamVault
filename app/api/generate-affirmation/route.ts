@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabaseServer'
+import { checkAndConsumeUsage } from '@/lib/subscription'
 import { checkRateLimit, getRateLimitHeaders } from '@/lib/rateLimit'
 import { validateInput, affirmationSchema } from '@/lib/validation'
 import { logSecurityEvent, sanitizeInput } from '@/lib/security'
@@ -27,6 +28,19 @@ export async function POST(req: NextRequest) {
       })
     }
 
+    // Check and consume usage
+    const { allowed, remaining, plan, limit } = await checkAndConsumeUsage(
+      supabase,
+      user.id,
+      "affirmation"
+    )
+    if (!allowed) {
+      return NextResponse.json({
+        error: "Quota exceeded",
+        detail: { feature: "affirmation", plan, limit, remaining }
+      }, { status: 402 })
+    }
+
     const body = await req.json()
     
     // Input validation
@@ -51,34 +65,44 @@ export async function POST(req: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'system', content: 'You are a spiritual guide and affirmation expert.' },
-          { role: 'user', content: prompt },
-        ],
-        max_tokens: 60,
-        temperature: 0.8,
-      }),
+        model: 'gpt-3.5-turbo',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 150,
+        temperature: 0.7
+      })
     })
 
+    if (!response.ok) {
+      throw new Error('Failed to generate affirmation')
+    }
+
     const data = await response.json()
-    const affirmation = data.choices?.[0]?.message?.content?.trim() || 'You are enough. Trust your journey.'
-    
+    const affirmation = data.choices[0]?.message?.content?.trim()
+
+    if (!affirmation) {
+      throw new Error('No affirmation generated')
+    }
+
     logSecurityEvent('AFFIRMATION_GENERATED', { 
       userId: user.id, 
-      zodiac 
+      zodiac,
+      remaining
     }, req as any)
-    
-    return NextResponse.json({ affirmation })
+
+    return NextResponse.json({ 
+      affirmation,
+      remaining,
+      plan
+    })
   } catch (error) {
-    console.error('Error in generate-affirmation API:', error)
+    console.error('Error generating affirmation:', error)
     logSecurityEvent('API_ERROR', { 
       path: '/api/generate-affirmation', 
       error: error instanceof Error ? error.message : 'Unknown error' 
     }, req as any)
-    return NextResponse.json({ error: "Failed to generate affirmation" }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to generate affirmation' }, { status: 500 })
   }
 }

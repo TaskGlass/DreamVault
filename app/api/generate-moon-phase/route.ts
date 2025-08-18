@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabaseServer'
+import { checkAndConsumeUsage } from '@/lib/subscription'
 import { checkRateLimit, getRateLimitHeaders } from '@/lib/rateLimit'
 import { validateInput, moonPhaseSchema } from '@/lib/validation'
 import { logSecurityEvent, sanitizeInput } from '@/lib/security'
@@ -27,6 +28,19 @@ export async function POST(req: NextRequest) {
       })
     }
 
+    // Check and consume usage
+    const { allowed, remaining, plan, limit } = await checkAndConsumeUsage(
+      supabase,
+      user.id,
+      "moon_phase"
+    )
+    if (!allowed) {
+      return NextResponse.json({
+        error: "Quota exceeded",
+        detail: { feature: "moon_phase", plan, limit, remaining }
+      }, { status: 402 })
+    }
+
     const body = await req.json()
     
     // Input validation
@@ -51,34 +65,44 @@ export async function POST(req: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'system', content: 'You are a poetic astrologer and moon phase expert.' },
-          { role: 'user', content: prompt },
-        ],
-        max_tokens: 80,
-        temperature: 0.7,
-      }),
+        model: 'gpt-3.5-turbo',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 200,
+        temperature: 0.7
+      })
     })
 
+    if (!response.ok) {
+      throw new Error('Failed to generate moon phase')
+    }
+
     const data = await response.json()
-    const moonPhase = data.choices?.[0]?.message?.content?.trim() || 'The moon is in a mysterious phase, guiding your dreams.'
-    
+    const moonPhase = data.choices[0]?.message?.content?.trim()
+
+    if (!moonPhase) {
+      throw new Error('No moon phase generated')
+    }
+
     logSecurityEvent('MOON_PHASE_GENERATED', { 
       userId: user.id, 
-      date 
+      date,
+      remaining
     }, req as any)
-    
-    return NextResponse.json({ moonPhase })
+
+    return NextResponse.json({ 
+      moonPhase,
+      remaining,
+      plan
+    })
   } catch (error) {
-    console.error('Error in generate-moon-phase API:', error)
+    console.error('Error generating moon phase:', error)
     logSecurityEvent('API_ERROR', { 
       path: '/api/generate-moon-phase', 
       error: error instanceof Error ? error.message : 'Unknown error' 
     }, req as any)
-    return NextResponse.json({ error: "Failed to generate moon phase" }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to generate moon phase' }, { status: 500 })
   }
 }

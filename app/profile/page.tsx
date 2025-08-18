@@ -1,42 +1,44 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Navigation } from "@/components/navigation"
-import { GlassCard } from "@/components/ui/glass-card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { User, Camera, Star, Crown, Zap, Settings, Bell, Moon, Heart, Calendar, LogOut } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import { supabase } from "@/lib/supabaseClient"
-import { useInactivityTimeout } from "@/hooks/use-inactivity-timeout"
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabaseClient'
+import { useInactivityTimeout } from '@/hooks/use-inactivity-timeout'
+import { GlassCard } from '@/components/ui/glass-card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Crown, Star, Zap, User, Mail, Calendar, Sparkles, Settings, LogOut, Edit3, Save, X } from 'lucide-react'
 
-const zodiacSigns = [
-  { name: "Aries", symbol: "♈", dates: "Mar 21 - Apr 19" },
-  { name: "Taurus", symbol: "♉", dates: "Apr 20 - May 20" },
-  { name: "Gemini", symbol: "♊", dates: "May 21 - Jun 20" },
-  { name: "Cancer", symbol: "♋", dates: "Jun 21 - Jul 22" },
-  { name: "Leo", symbol: "♌", dates: "Jul 23 - Aug 22" },
-  { name: "Virgo", symbol: "♍", dates: "Aug 23 - Sep 22" },
-  { name: "Libra", symbol: "♎", dates: "Sep 23 - Oct 22" },
-  { name: "Scorpio", symbol: "♏", dates: "Oct 23 - Nov 21" },
-  { name: "Sagittarius", symbol: "♐", dates: "Nov 22 - Dec 21" },
-  { name: "Capricorn", symbol: "♑", dates: "Dec 22 - Jan 19" },
-  { name: "Aquarius", symbol: "♒", dates: "Jan 20 - Feb 18" },
-  { name: "Pisces", symbol: "♓", dates: "Feb 19 - Mar 20" },
-]
+interface UsageData {
+  plan: string
+  period_start: string
+  usage: {
+    dream_interpretation: { used: number; limit: number; remaining: number }
+    daily_horoscope: { used: number; limit: number; remaining: number }
+    affirmation: { used: number; limit: number; remaining: number }
+    moon_phase: { used: number; limit: number; remaining: number }
+  }
+}
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<any>(null)
-  const [currentPlan, setCurrentPlan] = useState<any>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [plansOpen, setPlansOpen] = useState(false)
-  const { toast } = useToast()
+  const [usageData, setUsageData] = useState<UsageData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [editForm, setEditForm] = useState({
+    first_name: '',
+    last_name: '',
+    bio: '',
+    notifications: true,
+    dream_reminders: true,
+    weekly_reports: true
+  })
+
+  const router = useRouter()
 
   // Initialize inactivity timeout (3 minutes)
   useInactivityTimeout(3)
@@ -44,522 +46,405 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       const user = (await supabase.auth.getUser()).data.user
-      if (!user) return
-      // Fetch profile
+      if (!user) {
+        router.replace('/sign-in')
+        return
+      }
+
+      // Fetch profile data
       const { data: profileData } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single()
-      
+
       if (profileData) {
-        // Handle backward compatibility - if first_name/last_name are empty but name exists, parse it
-        if (!profileData.first_name && !profileData.last_name && profileData.name) {
-          const nameParts = profileData.name.trim().split(' ')
-          profileData.first_name = nameParts[0] || ''
-          profileData.last_name = nameParts.slice(1).join(' ') || ''
-        }
         setProfile(profileData)
+        setEditForm({
+          first_name: profileData.first_name || '',
+          last_name: profileData.last_name || '',
+          bio: profileData.bio || '',
+          notifications: profileData.notifications ?? true,
+          dream_reminders: profileData.dream_reminders ?? true,
+          weekly_reports: profileData.weekly_reports ?? true
+        })
       }
-      
-      // Fetch subscription
-      const { data: subData } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single()
-      setCurrentPlan(subData)
+
+      // Fetch usage data
+      try {
+        const session = (await supabase.auth.getSession()).data.session
+        const response = await fetch('/api/usage', {
+          headers: { 
+            'Content-Type': 'application/json',
+            ...(session ? { Authorization: `Bearer ${session.access_token}` } : {})
+          }
+        })
+        
+        if (response.ok) {
+          const usage = await response.json()
+          setUsageData(usage)
+        }
+      } catch (error) {
+        console.error('Error fetching usage data:', error)
+      }
+
+      setLoading(false)
     }
+
     fetchProfile()
-  }, [])
+  }, [router])
 
   const handleSave = async () => {
-    if (!profile?.id) return;
+    setSaving(true)
+    const user = (await supabase.auth.getUser()).data.user
+    if (!user) return
+
     const { error } = await supabase
-      .from("profiles")
+      .from('profiles')
       .update({
-        first_name: profile.first_name,
-        last_name: profile.last_name,
-        name: `${profile.first_name} ${profile.last_name}`.trim(), // Keep name field for compatibility
-        email: profile.email,
-        birthday: profile.birthday,
-        zodiac: profile.zodiac,
-        bio: profile.bio,
-        notifications: profile.notifications,
-        dream_reminders: profile.dream_reminders,
-        weekly_reports: profile.weekly_reports,
+        first_name: editForm.first_name,
+        last_name: editForm.last_name,
+        name: `${editForm.first_name} ${editForm.last_name}`.trim(), // Keep for compatibility
+        bio: editForm.bio,
+        notifications: editForm.notifications,
+        dream_reminders: editForm.dream_reminders,
+        weekly_reports: editForm.weekly_reports,
+        updated_at: new Date().toISOString()
       })
-      .eq("id", profile.id);
-    setIsEditing(false);
-    if (error) {
-      toast({
-        title: "Update failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Profile updated",
-        description: "Your changes have been saved successfully.",
-      });
+      .eq('id', user.id)
+
+    if (!error) {
+      setProfile({
+        ...profile,
+        ...editForm,
+        name: `${editForm.first_name} ${editForm.last_name}`.trim()
+      })
+      setIsEditing(false)
     }
+    setSaving(false)
   }
 
   const handleUpgrade = async (plan: string) => {
-    if (!profile?.email) return
+    const session = (await supabase.auth.getSession()).data.session
+    if (!session) {
+      router.push('/sign-in')
+      return
+    }
+
+    const email = session.user.email || undefined
     const res = await fetch('/api/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: profile.email, plan }),
+      body: JSON.stringify({ email, plan, billingCycle: 'monthly' })
     })
     const data = await res.json()
-    if (data.url) {
-      window.location.href = data.url
-    }
+    if (data?.url) window.location.href = data.url
   }
 
-  const selectedZodiac = zodiacSigns.find((sign) => sign.name === profile?.zodiac)
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    router.push('/home')
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen">
-      <Navigation />
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4">
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-white">Profile</h1>
+          <Button variant="outline" onClick={handleSignOut} className="text-white border-white/20 hover:bg-white/10">
+            <LogOut className="h-4 w-4 mr-2" />
+            Sign Out
+          </Button>
+        </div>
 
-      <main className="pt-8 pb-28 md:ml-72 md:pb-8">
-        <div className="p-4 space-y-6">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-glow flex items-center">
-                <User className="h-6 w-6 mr-2 text-purple-400" />
-                Profile
-              </h1>
-              <p className="text-gray-400 mt-1">
-                Manage your account
-                <br />
-                and spiritual preferences
-              </p>
-            </div>
-            <div className="flex flex-col gap-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={async () => {
-                  try {
-                    await supabase.auth.signOut();
-                    window.location.href = '/sign-in';
-                  } catch (error) {
-                    console.error('Error logging out:', error);
-                  }
-                }}
-                className="bg-red-500/10 hover:bg-red-500/20 border-red-500/30 text-red-300 hover:text-red-200"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
+        {/* Profile Information */}
+        <GlassCard>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold flex items-center">
+              <User className="h-5 w-5 mr-2 text-purple-400" />
+              Personal Information
+            </h2>
+            {!isEditing ? (
+              <Button variant="outline" onClick={() => setIsEditing(true)} className="text-white border-white/20 hover:bg-white/10">
+                <Edit3 className="h-4 w-4 mr-2" />
+                Edit
               </Button>
-              <Button
-                size="sm"
-                onClick={isEditing ? handleSave : () => setIsEditing(true)}
-                className="bg-gradient-to-r from-purple-600 to-blue-600"
-              >
-                {isEditing ? "Save Changes" : "Edit Profile"}
-              </Button>
-            </div>
+            ) : (
+              <div className="flex gap-2">
+                <Button onClick={handleSave} disabled={saving} className="bg-purple-600 hover:bg-purple-700">
+                  <Save className="h-4 w-4 mr-2" />
+                  {saving ? 'Saving...' : 'Save'}
+                </Button>
+                <Button variant="outline" onClick={() => setIsEditing(false)} className="text-white border-white/20 hover:bg-white/10">
+                  <X className="h-4 w-4 mr-2" />
+                  Cancel
+                </Button>
+              </div>
+            )}
           </div>
 
-          {/* Profile Card */}
-          <GlassCard glow>
-            <div className="flex flex-col lg:flex-row items-center lg:items-start gap-8 p-2">
-              {/* Avatar Section */}
-              <div className="flex flex-col items-center space-y-4">
-                <div className="relative">
-                  <div className="w-32 h-32 rounded-full bg-gradient-to-br from-purple-500/30 to-pink-500/30 flex items-center justify-center border-2 border-purple-400/20 shadow-lg">
-                    <User className="h-16 w-16 text-purple-200" />
-                  </div>
-                  {isEditing && (
-                    <Button
-                      size="sm"
-                      className="absolute -bottom-2 -right-2 rounded-full w-10 h-10 p-0 bg-purple-600 hover:bg-purple-700 border-2 border-background"
-                      variant="default"
-                    >
-                      <Camera className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
+          {!isEditing ? (
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <Label className="text-gray-300">Name</Label>
+                <p className="text-white font-medium">{profile?.name || 'Not set'}</p>
               </div>
-
-              {/* Profile Info Section */}
-              <div className="flex-1 text-center lg:text-left space-y-4 min-w-0">
-                {isEditing ? (
-                  <div className="space-y-4 max-w-md mx-auto lg:mx-0">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label htmlFor="first_name" className="text-sm font-medium text-gray-300">
-                          First Name
-                        </Label>
-                        <Input
-                          id="first_name"
-                          value={profile?.first_name || ''}
-                          onChange={(e) => setProfile({ ...profile, first_name: e.target.value })}
-                          className="bg-white/5 border-white/10 mt-1"
-                          placeholder="Enter first name"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="last_name" className="text-sm font-medium text-gray-300">
-                          Last Name
-                        </Label>
-                        <Input
-                          id="last_name"
-                          value={profile?.last_name || ''}
-                          onChange={(e) => setProfile({ ...profile, last_name: e.target.value })}
-                          className="bg-white/5 border-white/10 mt-1"
-                          placeholder="Enter last name"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="email" className="text-sm font-medium text-gray-300">
-                        Email
-                      </Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={profile?.email}
-                        onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                        className="bg-white/5 border-white/10 mt-1"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div>
-                      <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">
-                        {profile?.first_name && profile?.last_name 
-                          ? `${profile.first_name} ${profile.last_name}`
-                          : profile?.name || 'Your Name'
-                        }
-                      </h2>
-                      <p className="text-gray-300 text-lg">{profile?.email}</p>
-                    </div>
-                    <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
-                      <Badge className="bg-purple-500/20 text-purple-200 border-purple-400/30 px-3 py-1 text-sm font-medium">
-                        {currentPlan?.plan_name || 'Dream Lite'}
-                      </Badge>
-                      <Badge className="bg-blue-500/20 text-blue-200 border-blue-400/30 px-3 py-1 text-sm font-medium">
-                        {selectedZodiac?.symbol} {selectedZodiac?.name}
-                      </Badge>
-                    </div>
-                  </div>
-                )}
+              <div>
+                <Label className="text-gray-300">Email</Label>
+                <p className="text-white font-medium flex items-center">
+                  <Mail className="h-4 w-4 mr-2" />
+                  {profile?.email}
+                </p>
               </div>
-
-              {/* Current Plan Section */}
-              <div className="flex-shrink-0">
-                <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-500/15 to-blue-500/15 border border-purple-400/20 backdrop-blur-sm min-w-[200px]">
-                  <div className="text-center space-y-4">
-                    <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-purple-500/30 to-blue-500/30 flex items-center justify-center">
-                      <Zap className={`h-8 w-8 ${currentPlan?.plan_name === "Astral Voyager" ? "text-purple-400" : "text-blue-400"}`} />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-white text-lg">{currentPlan?.plan_name}</h3>
-                      <p className="text-gray-300 font-medium">{currentPlan?.price}</p>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full bg-white/5 border-white/20 hover:bg-white/10 text-white font-medium mt-2" onClick={() => handleUpgrade('Lucid Explorer')}>Upgrade to Lucid Explorer</Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full bg-white/5 border-white/20 hover:bg-white/10 text-white font-medium mt-2" onClick={() => handleUpgrade('Astral Voyager')}>Upgrade to Astral Voyager</Button>
-                  </div>
-                </div>
+              <div>
+                <Label className="text-gray-300">Birthday</Label>
+                <p className="text-white font-medium flex items-center">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  {profile?.birthday ? new Date(profile.birthday).toLocaleDateString() : 'Not set'}
+                </p>
+              </div>
+              <div>
+                <Label className="text-gray-300">Zodiac Sign</Label>
+                <p className="text-white font-medium flex items-center">
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  {profile?.zodiac || 'Not set'}
+                </p>
+              </div>
+              <div className="md:col-span-2">
+                <Label className="text-gray-300">Bio</Label>
+                <p className="text-white">{profile?.bio || 'No bio yet'}</p>
               </div>
             </div>
-          </GlassCard>
-
-          {/* Spiritual Profile */}
-          <GlassCard>
-            <h2 className="text-xl font-semibold mb-6 flex items-center">
-              <Star className="h-5 w-5 mr-2 text-yellow-400" />
-              Spiritual Profile
-            </h2>
-
+          ) : (
             <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <Label htmlFor="first_name" className="text-gray-300">First Name</Label>
+                <Input
+                  id="first_name"
+                  value={editForm.first_name}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, first_name: e.target.value }))}
+                  className="bg-white/10 border-white/20 text-white"
+                />
+              </div>
+              <div>
+                <Label htmlFor="last_name" className="text-gray-300">Last Name</Label>
+                <Input
+                  id="last_name"
+                  value={editForm.last_name}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, last_name: e.target.value }))}
+                  className="bg-white/10 border-white/20 text-white"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <Label htmlFor="bio" className="text-gray-300">Bio</Label>
+                <textarea
+                  id="bio"
+                  value={editForm.bio}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
+                  className="w-full h-24 bg-white/10 border border-white/20 rounded-md p-3 text-white resize-none"
+                  placeholder="Tell us about yourself..."
+                />
+              </div>
+            </div>
+          )}
+        </GlassCard>
+
+        {/* Subscription & Usage */}
+        <GlassCard>
+          <h2 className="text-xl font-semibold mb-6 flex items-center">
+            <Crown className="h-5 w-5 mr-2 text-yellow-400" />
+            Subscription & Usage
+          </h2>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="font-semibold mb-4">Current Plan: {usageData?.plan || 'Dream Lite'}</h3>
+              <div className="space-y-2 mb-6">
+                <div className="flex items-center text-sm">
+                  <div className="w-2 h-2 bg-purple-400 rounded-full mr-3" />
+                  Dream Interpretations: {usageData?.usage.dream_interpretation.limit || 5}/month
+                </div>
+                <div className="flex items-center text-sm">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full mr-3" />
+                  Daily Horoscopes: {usageData?.usage.daily_horoscope.limit || 30}/month
+                </div>
+                <div className="flex items-center text-sm">
+                  <div className="w-2 h-2 bg-green-400 rounded-full mr-3" />
+                  Affirmations: {usageData?.usage.affirmation.limit || 10}/month
+                </div>
+                <div className="flex items-center text-sm">
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full mr-3" />
+                  Moon Phases: {usageData?.usage.moon_phase.limit || 10}/month
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600" onClick={() => handleUpgrade('Astral Voyager')}>
+                  <Crown className="h-4 w-4 mr-2" />
+                  Upgrade to Astral Voyager
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full bg-purple-600/20 border-purple-400/30 text-white hover:bg-purple-600/30"
+                  onClick={() => setPlansOpen(true)}
+                >
+                  View All Plans
+                </Button>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-4">This Month's Usage</h3>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="birthday">Birthday</Label>
-                  {isEditing ? (
-                    <Input
-                      id="birthday"
-                      type="date"
-                      value={profile?.birthday}
-                      onChange={(e) => setProfile({ ...profile, birthday: e.target.value })}
-                      className="bg-white/5 border-white/10"
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm">Dream Interpretations</span>
+                    <span className="text-sm font-medium">
+                      {usageData?.usage.dream_interpretation.remaining || 0}/{usageData?.usage.dream_interpretation.limit || 5}
+                    </span>
+                  </div>
+                  <div className="w-full bg-white/5 rounded-full h-2">
+                    <div 
+                      className="bg-purple-500 h-2 rounded-full" 
+                      style={{ 
+                        width: `${usageData ? ((usageData.usage.dream_interpretation.remaining / usageData.usage.dream_interpretation.limit) * 100) : 100}%` 
+                      }} 
                     />
-                  ) : (
-                    <div className="flex items-center mt-2">
-                      <Calendar className="h-4 w-4 text-gray-400 mr-2" />
-                      <span>{new Date(profile?.birthday).toLocaleDateString()}</span>
-                    </div>
-                  )}
+                  </div>
                 </div>
 
                 <div>
-                  <Label htmlFor="zodiac">Zodiac Sign</Label>
-                  {isEditing ? (
-                    <Select
-                      value={profile?.zodiac}
-                      onValueChange={(value) => setProfile({ ...profile, zodiac: value })}
-                    >
-                      <SelectTrigger className="bg-white/5 border-white/10">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {zodiacSigns.map((sign) => (
-                          <SelectItem key={sign.name} value={sign.name}>
-                            {sign.symbol} {sign.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <div className="flex items-center mt-2">
-                      <span className="text-2xl mr-2">{selectedZodiac?.symbol}</span>
-                      <div>
-                        <p className="font-medium">{selectedZodiac?.name}</p>
-                        <p className="text-sm text-gray-400">{selectedZodiac?.dates}</p>
-                      </div>
-                    </div>
-                  )}
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm">Daily Horoscopes</span>
+                    <span className="text-sm font-medium">
+                      {usageData?.usage.daily_horoscope.remaining || 0}/{usageData?.usage.daily_horoscope.limit || 30}
+                    </span>
+                  </div>
+                  <div className="w-full bg-white/5 rounded-full h-2">
+                    <div 
+                      className="bg-blue-500 h-2 rounded-full" 
+                      style={{ 
+                        width: `${usageData ? ((usageData.usage.daily_horoscope.remaining / usageData.usage.daily_horoscope.limit) * 100) : 100}%` 
+                      }} 
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm">Affirmations</span>
+                    <span className="text-sm font-medium">
+                      {usageData?.usage.affirmation.remaining || 0}/{usageData?.usage.affirmation.limit || 10}
+                    </span>
+                  </div>
+                  <div className="w-full bg-white/5 rounded-full h-2">
+                    <div 
+                      className="bg-green-500 h-2 rounded-full" 
+                      style={{ 
+                        width: `${usageData ? ((usageData.usage.affirmation.remaining / usageData.usage.affirmation.limit) * 100) : 100}%` 
+                      }} 
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm">Moon Phases</span>
+                    <span className="text-sm font-medium">
+                      {usageData?.usage.moon_phase.remaining || 0}/{usageData?.usage.moon_phase.limit || 10}
+                    </span>
+                  </div>
+                  <div className="w-full bg-white/5 rounded-full h-2">
+                    <div 
+                      className="bg-yellow-500 h-2 rounded-full" 
+                      style={{ 
+                        width: `${usageData ? ((usageData.usage.moon_phase.remaining / usageData.usage.moon_phase.limit) * 100) : 100}%` 
+                      }} 
+                    />
+                  </div>
+                </div>
+
+                <div className="p-3 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-lg">
+                  <p className="text-sm text-green-300">
+                    Great usage! You have {usageData?.usage.dream_interpretation.remaining || 0} dream interpretations, {usageData?.usage.daily_horoscope.remaining || 0} horoscopes, {usageData?.usage.affirmation.remaining || 0} affirmations, and {usageData?.usage.moon_phase.remaining || 0} moon phases remaining this month.
+                  </p>
                 </div>
               </div>
-
-              <div>
-                <Label htmlFor="bio">About Your Spiritual Journey</Label>
-                {isEditing ? (
-                  <Textarea
-                    id="bio"
-                    value={profile?.bio}
-                    onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                    className="bg-white/5 border-white/10 min-h-24"
-                    placeholder="Share your spiritual interests and dream goals..."
-                  />
-                ) : (
-                  <p className="text-gray-300 mt-2 leading-relaxed">{profile?.bio}</p>
-                )}
-              </div>
             </div>
-          </GlassCard>
+          </div>
+        </GlassCard>
 
-          {/* Subscription Details */}
-          <GlassCard>
-            <h2 className="text-xl font-semibold mb-6 flex items-center">
-              <Crown className="h-5 w-5 mr-2 text-yellow-400" />
-              Subscription & Usage
-            </h2>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="font-semibold mb-4">Current Plan Features</h3>
-                <ul className="space-y-2">
-                  {currentPlan?.features?.split(',').map((feature: string, index: number) => (
-                    <li key={index} className="flex items-center text-sm">
-                      <div className="w-2 h-2 bg-purple-400 rounded-full mr-3" />
-                      {feature}
-                    </li>
-                  ))}
+        {/* Plans Modal */}
+        <Dialog open={plansOpen} onOpenChange={setPlansOpen}>
+          <DialogContent className="max-w-3xl bg-black border border-white/10">
+            <DialogHeader>
+              <DialogTitle>Choose a Plan</DialogTitle>
+              <DialogDescription>Select the plan that fits your journey. You will be taken to a secure Stripe checkout.</DialogDescription>
+            </DialogHeader>
+            <div className="grid sm:grid-cols-3 gap-4 mt-2">
+              {/* Dream Lite Plan */}
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex flex-col h-full">
+                <div className="flex items-center gap-2 mb-2">
+                  <Star className="h-5 w-5 text-blue-400" />
+                  <div className="font-semibold">Dream Lite (Free)</div>
+                </div>
+                <ul className="text-sm text-gray-300 mb-3 list-disc list-inside space-y-1">
+                  <li>5 dream interpretations</li>
+                  <li>30 daily horoscopes</li>
+                  <li>10 affirmations</li>
+                  <li>10 moon phases</li>
+                  <li>Basic dream journal</li>
+                  <li>Community support</li>
                 </ul>
-
-                <div className="mt-6 space-y-2">
-                  <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600" onClick={() => handleUpgrade('Astral Voyager')}>
-                    <Crown className="h-4 w-4 mr-2" />
-                    Upgrade to Astral Voyager
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full bg-purple-600/20 border-purple-400/30 text-white hover:bg-purple-600/30"
-                    onClick={() => setPlansOpen(true)}
-                  >
-                    View All Plans
-                  </Button>
-                </div>
+                <Button variant="outline" className="w-full mt-auto" onClick={() => setPlansOpen(false)}>Stay on Free</Button>
               </div>
-
-              <div>
-                <h3 className="font-semibold mb-4">This Month's Usage</h3>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm">Dream Interpretations</span>
-                      <span className="text-sm font-medium">{currentPlan?.dream_interpretations_remaining || 0}/15</span>
-                    </div>
-                    <div className="w-full bg-white/5 rounded-full h-2">
-                      <div className="bg-purple-500 h-2 rounded-full" style={{ width: `${(currentPlan?.dream_interpretations_remaining || 0) / 15 * 100}%` }} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm">Tarot Readings</span>
-                      <span className="text-sm font-medium">{currentPlan?.tarot_readings_remaining || 0}/15</span>
-                    </div>
-                    <div className="w-full bg-white/5 rounded-full h-2">
-                      <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${(currentPlan?.tarot_readings_remaining || 0) / 15 * 100}%` }} />
-                    </div>
-                  </div>
-
-                  <div className="p-3 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-lg">
-                    <p className="text-sm text-green-300">
-                      Great usage! You have {currentPlan?.dream_interpretations_remaining || 0} dream interpretations and {currentPlan?.tarot_readings_remaining || 0} tarot readings remaining this month.
-                    </p>
-                  </div>
+              {/* Lucid Explorer */}
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex flex-col h-full">
+                <div className="flex items-center gap-2 mb-2">
+                  <Zap className="h-5 w-5 text-purple-400" />
+                  <div className="font-semibold">Lucid Explorer</div>
                 </div>
+                <ul className="text-sm text-gray-300 mb-3 list-disc list-inside space-y-1">
+                  <li>50 dream interpretations</li>
+                  <li>30 daily horoscopes</li>
+                  <li>50 affirmations</li>
+                  <li>50 moon phases</li>
+                  <li>Advanced mood & emotion insights</li>
+                  <li>Priority email support</li>
+                </ul>
+                <Button className="w-full mt-auto" onClick={() => handleUpgrade('Lucid Explorer')}>Choose Lucid Explorer</Button>
+              </div>
+              {/* Astral Voyager */}
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex flex-col h-full">
+                <div className="flex items-center gap-2 mb-2">
+                  <Crown className="h-5 w-5 text-yellow-400" />
+                  <div className="font-semibold">Astral Voyager</div>
+                </div>
+                <ul className="text-sm text-gray-300 mb-3 list-disc list-inside space-y-1">
+                  <li>200 dream interpretations</li>
+                  <li>30 daily horoscopes</li>
+                  <li>200 affirmations</li>
+                  <li>200 moon phases</li>
+                  <li>Weekly dream pattern summaries</li>
+                  <li>Shareable dream reports</li>
+                  <li>Advanced symbol analysis</li>
+                  <li>Priority support</li>
+                </ul>
+                <Button variant="outline" className="w-full mt-auto" onClick={() => handleUpgrade('Astral Voyager')}>Choose Astral Voyager</Button>
               </div>
             </div>
-          </GlassCard>
-
-          {/* Plans Modal */}
-          <Dialog open={plansOpen} onOpenChange={setPlansOpen}>
-            <DialogContent className="max-w-3xl bg-black border border-white/10">
-              <DialogHeader>
-                <DialogTitle>Choose a Plan</DialogTitle>
-                <DialogDescription>Select the plan that fits your journey. You will be taken to a secure Stripe checkout.</DialogDescription>
-              </DialogHeader>
-              <div className="grid sm:grid-cols-3 gap-4 mt-2">
-                {/* Free Plan */}
-                <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex flex-col h-full">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Star className="h-5 w-5 text-blue-400" />
-                    <div className="font-semibold">Dream Lite (Free)</div>
-                  </div>
-                  <ul className="text-sm text-gray-300 mb-3 list-disc list-inside space-y-1">
-                    <li>5 dream interpretations</li>
-                    <li>5 tarot readings</li>
-                    <li>Basic dream journal</li>
-                    <li>Save dreams</li>
-                    <li>Community support</li>
-                  </ul>
-                  <Button variant="outline" className="w-full mt-auto" onClick={() => setPlansOpen(false)}>Stay on Free</Button>
-                </div>
-                {/* Lucid Explorer */}
-                <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex flex-col h-full">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Zap className="h-5 w-5 text-purple-400" />
-                    <div className="font-semibold">Lucid Explorer</div>
-                  </div>
-                  <ul className="text-sm text-gray-300 mb-3 list-disc list-inside space-y-1">
-                    <li>15 dream interpretations</li>
-                    <li>15 tarot readings</li>
-                    <li>Advanced mood & emotion insights</li>
-                    <li>Daily affirmations</li>
-                    <li>Priority email support</li>
-                  </ul>
-                  <Button className="w-full mt-auto" onClick={() => handleUpgrade('Lucid Explorer')}>Choose Lucid Explorer</Button>
-                </div>
-                {/* Astral Voyager */}
-                <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex flex-col h-full">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Crown className="h-5 w-5 text-yellow-400" />
-                    <div className="font-semibold">Astral Voyager</div>
-                  </div>
-                  <ul className="text-sm text-gray-300 mb-3 list-disc list-inside space-y-1">
-                    <li>30 dream interpretations</li>
-                    <li>30 tarot readings</li>
-                    <li>Weekly dream pattern summaries</li>
-                    <li>Shareable dream reports</li>
-                    <li>Advanced symbol analysis</li>
-                    <li>Priority support</li>
-                  </ul>
-                  <Button variant="outline" className="w-full mt-auto" onClick={() => handleUpgrade('Astral Voyager')}>Choose Astral Voyager</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          {/* Settings */}
-          <GlassCard>
-            <h2 className="text-xl font-semibold mb-6 flex items-center">
-              <Settings className="h-5 w-5 mr-2 text-gray-400" />
-              Preferences
-            </h2>
-
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <Bell className="h-5 w-5 text-blue-400 mr-3" />
-                  <div>
-                    <h3 className="font-medium">Push Notifications</h3>
-                    <p className="text-sm text-gray-400">Receive alerts for new insights</p>
-                  </div>
-                </div>
-                <Switch
-                  checked={profile?.notifications}
-                  onCheckedChange={(checked) => setProfile({ ...profile, notifications: checked })}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <Moon className="h-5 w-5 text-purple-400 mr-3" />
-                  <div>
-                    <h3 className="font-medium">Dream Reminders</h3>
-                    <p className="text-sm text-gray-400">Daily prompts to record your dreams</p>
-                  </div>
-                </div>
-                <Switch
-                  checked={profile?.dream_reminders}
-                  onCheckedChange={(checked) => setProfile({ ...profile, dream_reminders: checked })}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <Heart className="h-5 w-5 text-pink-400 mr-3" />
-                  <div>
-                    <h3 className="font-medium">Weekly Reports</h3>
-                    <p className="text-sm text-gray-400">Summary of your dream patterns</p>
-                  </div>
-                </div>
-                <Switch
-                  checked={profile?.weekly_reports}
-                  onCheckedChange={(checked) => setProfile({ ...profile, weekly_reports: checked })}
-                />
-              </div>
-            </div>
-          </GlassCard>
-
-          {/* Account Actions */}
-          <GlassCard>
-            <h2 className="text-xl font-semibold mb-6">Account Management</h2>
-            <div className="grid md:grid-cols-2 gap-4">
-              <Button
-                variant="outline"
-                className="justify-start bg-purple-600/20 border-purple-400/30 text-white hover:bg-purple-600/30"
-              >
-                Export Dream Data
-              </Button>
-              <Button
-                variant="outline"
-                className="justify-start bg-blue-600/20 border-blue-400/30 text-white hover:bg-blue-600/30"
-              >
-                Privacy Settings
-              </Button>
-              <Button
-                variant="outline"
-                className="justify-start bg-indigo-600/20 border-indigo-400/30 text-white hover:bg-indigo-600/30"
-              >
-                Change Password
-              </Button>
-              <Button variant="destructive" className="justify-start">
-                Delete Account
-              </Button>
-            </div>
-          </GlassCard>
-        </div>
-      </main>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   )
 }
